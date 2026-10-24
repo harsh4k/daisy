@@ -1,0 +1,6 @@
+PyQt6==6.11.0
+QtAwesome==1.4.1
+psutil==7.2.2
+pillow==12.2.0
+requests
+winsdk==1.0.0b10

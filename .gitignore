@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.spec
+# Your own settings, logs and local run files
+config.json
+*.log
+app.pid

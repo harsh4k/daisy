@@ -1,0 +1,52 @@
+{
+  "netflix": {
+    "file": "netflix.png",
+    "url": "https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2016.png",
+    "publisher_page": "https://www.netflix.com/",
+    "retrieved_utc": "2026-10-20T18:42:56.804807+00:00",
+    "sha256": "7341f7b8b0ae3c0da4aea559efc31f0b53d9db9dd291664fdcf7d618fd95ed8a",
+    "bytes": 1755
+  },
+  "youtube": {
+    "file": "youtube.png",
+    "url": "https://www.youtube.com/s/desktop/2fe123f7/img/favicon_144x144.png",
+    "publisher_page": "https://www.youtube.com/",
+    "retrieved_utc": "2026-10-20T18:42:56.820850+00:00",
+    "sha256": "e39dc3d8c2f82ad2375132a8efcf521c232d5e2cf08abeb9bebe1ad94afb2157",
+    "bytes": 5020
+  },
+  "chrome": {
+    "file": "chrome.png",
+    "url": "https://www.google.com/chrome/static/images/favicons/android-icon-192x192.png",
+    "publisher_page": "https://www.google.com/chrome/",
+    "retrieved_utc": "2026-10-20T18:42:56.900324+00:00",
+    "sha256": "df6e0f204a9715c5b505d30f636c1c5511c44dcb08ed50f63e1dd23845ab5df7",
+    "bytes": 10569
+  },
+  "edge": {
+    "file": "edge.png",
+    "url": "https://edgestatic.azureedge.net/welcome/static/favicon.png",
+    "publisher_page": "https://www.microsoft.com/edge",
+    "retrieved_utc": "2026-10-20T18:42:56.972736+00:00",
+    "sha256": "4d755ac02a070a1b4bb1b6f1c88ab493440109a8ac1e314aaced92f94cdc98e9",
+    "bytes": 7904
+  },
+  "spotify": {
+    "file": "spotify.svg",
+    "url": "https://developer.spotify.com/images/guidelines/design/2024-spotify-logo-icon.zip",
+    "publisher_page": "https://developer.spotify.com/documentation/design",
+    "retrieved_utc": "2026-10-20T18:42:57.791479+00:00",
+    "archive_member": "Primary_Logo_Green_RGB.svg",
+    "archive_sha256": "7e1983c32004db74a8e4a5c705e1bffcf11b829f6da74c52d678621238e2846d",
+    "sha256": "ead72f82725038389cca09f439fdb7807640e122500c934f2500c7036bf40dbb",
+    "bytes": 1255
+  },
+  "brave": {
+    "file": "brave.png",
+    "url": "https://brave.com/static-assets/images/cropped-brave_appicon_release-192x192.png",
+    "publisher_page": "https://brave.com/",
+    "retrieved_utc": "2026-10-20T18:44:06.766691+00:00",
+    "sha256": "97567c070955e885787eb1e45768d0e977a88c4b42de6985072b338f29d61552",
+    "bytes": 3263
+  }
+}

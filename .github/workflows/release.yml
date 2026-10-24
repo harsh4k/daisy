@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m unittest discover -s tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+
+  release:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements-build.txt
+      - run: powershell -File build_exe.ps1
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path package | Out-Null
+          Copy-Item dist/Daisy.exe, install.ps1, uninstall.ps1, LICENSE, NOTICE.md package/
+          Compress-Archive -Path package/* -DestinationPath Daisy-win-x64.zip
+          $hash = (Get-FileHash Daisy-win-x64.zip -Algorithm SHA256).Hash.ToLower()
+          "$hash  Daisy-win-x64.zip" | Set-Content Daisy-win-x64.zip.sha256 -NoNewline
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Daisy-win-x64.zip
+            Daisy-win-x64.zip.sha256
+          generate_release_notes: true
