@@ -15,7 +15,8 @@ class HoverOpenMotionTests(unittest.TestCase):
 
     def window(self):
         helper = test_hover.HoverTests()
-        window = helper.window()
+        # 'auto' follows Windows, and a CI runner has animations off: motion must be explicit.
+        window = helper.window({'motion_mode': 'full'})
         self.addCleanup(helper.doCleanups)
         return window
 
