@@ -53,6 +53,7 @@ from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
                              QComboBox, QScrollArea, QMessageBox, QToolButton, QFileDialog)
 
                
+GLASS_ALPHA = 205  # Liquid Glass: how opaque the shell is, of 255
 DWMWA_SYSTEMBACKDROP_TYPE = 38
 DWMWA_WINDOW_CORNER_PREFERENCE = 33
 DWMSBT_DISABLE = 1
@@ -388,7 +389,11 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
 
         # The opaque fill is the whole shape: inset "shadow" layers under it were
         # never visible and cost five full-size paths per frame.
-        painter.setBrush(QBrush(QColor(self.theme['island'])))
+        glass = self.island_style == 'Liquid Glass'
+        fill = QColor(self.theme['island'])
+        if glass:
+            fill.setAlpha(GLASS_ALPHA)
+        painter.setBrush(QBrush(fill))
         if is_notch:
             painter.drawPath(self.build_notch_path(rect))
         else:
@@ -411,10 +416,13 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         painter.setClipPath(clip_path)
         # Each page brings its own light: album colour, sky, night, amber.
         stage_wash.paint(self, painter, rect)
+        if glass:
+            self.paint_glass(painter, rect, radius)
 
-        can_anim = (self.decorative_motion and self.animation_style != "None" and self.features[self.current_feature_index] == "dashboard"
-                    and (self.current_state == "Hover" or
-                         (self.current_state == "Idle" and self.media_state in ("Playing", "Paused"))))
+        # The effect lights the Now page, and the pill whenever it is showing.
+        can_anim = (self.decorative_motion and self.animation_style != "None"
+                    and (self.current_state == "Idle" or
+                         (self.current_state == "Hover" and self.features[self.current_feature_index] == "dashboard")))
         
         if can_anim:
             if self.animation_style == "Glow Sweep": self.paint_glow_sweep(painter, rect, radius)
@@ -434,6 +442,17 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
             ignite_motion.paint_rim(painter, rect, clip_path, self.edge_path(rect, radius),
                                     self.ignite_phase, self.theme['accent'])
                                      
+
+    def paint_glass(self, painter, rect, radius):
+        """Liquid Glass: a see-through shell with a soft sheen from the top and a bright rim."""
+        sheen = QLinearGradient(0, rect.top(), 0, rect.bottom())
+        sheen.setColorAt(0., QColor(255, 255, 255, 52))
+        sheen.setColorAt(.4, QColor(255, 255, 255, 12))
+        sheen.setColorAt(1., QColor(255, 255, 255, 0))
+        painter.fillRect(rect, QBrush(sheen))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(QColor(255, 255, 255, 84), 1.2))
+        painter.drawPath(self.edge_path(rect, radius))
 
     def paint_shine_sweep(self, painter, rect, radius):
         import math
@@ -457,7 +476,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
             target_x = start_x + (current_expansion * 0.4) + jitter_x
             target_y = (h / 2) + jitter_y
             painter.save()
-            painter.translate(target_x, target_y)
+            painter.translate(rect.x() + target_x, rect.y() + target_y)
             painter.scale(2.5, 0.8) 
             grad = QRadialGradient(QPointF(0, 0), W / 2)
             alpha = int(base_alpha * (1.0 - i * 0.3))
@@ -472,19 +491,19 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
 
     def paint_glow_sweep(self, painter, rect, radius):
         from PyQt6.QtGui import QTransform
-        glow = QColor(self.theme['accent']); glow.setAlpha(28)
-        gradient = QLinearGradient(0, 0, rect.width(), 0); gradient.setSpread(QLinearGradient.Spread.RepeatSpread)
+        glow = QColor(self.theme["accent"]); glow.setAlpha(56)
+        gradient = QLinearGradient(rect.x(), 0, rect.x() + rect.width(), 0); gradient.setSpread(QLinearGradient.Spread.RepeatSpread)
         gradient.setColorAt(0.0, Qt.GlobalColor.transparent); gradient.setColorAt(0.5, glow); gradient.setColorAt(1.0, Qt.GlobalColor.transparent)
         brush = QBrush(gradient); transform = QTransform(); transform.translate(self.gradient_phase * rect.width() * 2, 0); brush.setTransform(transform)
         painter.setBrush(brush); self._draw_shape(painter, rect, radius)
 
     def paint_fluid_blobs(self, painter, rect, radius):
         painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Screen)
-        glow_color = QColor(self.theme['accent']); glow_color.setAlpha(20); p = self.gradient_phase * 2 * math.pi
-        x1, y1 = rect.width() * (0.2 + 0.15 * math.sin(p)), rect.height() * (0.5 + 0.25 * math.cos(p))
+        glow_color = QColor(self.theme['accent']); glow_color.setAlpha(64); p = self.gradient_phase * 2 * math.pi
+        x1, y1 = rect.x() + rect.width() * (0.2 + 0.15 * math.sin(p)), rect.y() + rect.height() * (0.5 + 0.25 * math.cos(p))
         g1 = QRadialGradient(x1, y1, rect.width() * 0.45); g1.setColorAt(0, glow_color); g1.setColorAt(1, Qt.GlobalColor.transparent)
         painter.setBrush(g1); self._draw_shape(painter, rect, radius)
-        x2, y2 = rect.width() * (0.8 + 0.15 * math.cos(p * 0.7)), rect.height() * (0.5 + 0.25 * math.sin(p * 1.2))
+        x2, y2 = rect.x() + rect.width() * (0.8 + 0.15 * math.cos(p * 0.7)), rect.y() + rect.height() * (0.5 + 0.25 * math.sin(p * 1.2))
         g2 = QRadialGradient(x2, y2, rect.width() * 0.35); g2.setColorAt(0, QColor(glow_color).lighter(125)); g2.setColorAt(1, Qt.GlobalColor.transparent)
         painter.setBrush(g2); self._draw_shape(painter, rect, radius)
         painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
@@ -512,10 +531,10 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
             return
         self.gradient_phase = (self.gradient_phase + 0.005) % 1.0
         self.weather_bg_phase = (self.weather_bg_phase + 0.003) % 1.0
-        if self.current_state in ("Hover", "Notify") or self.media_state in ("Playing", "Paused") or\
+        if self.current_state in ("Idle", "Hover", "Notify") or self.media_state in ("Playing", "Paused") or\
            self._weather_bg_opacity > 0.0 or self._perf_bg_opacity > 0.0 or\
            self._calendar_bg_opacity > 0.0 or self._month_bg_opacity > 0.0: 
-            self.update()
+            self.update_island_region()
 
     def get_windows_accent_color(self):
         try:
@@ -1619,9 +1638,14 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         self.update()
 
     def set_animation_style(self, style):
-        """Record the chosen effect. The decorative master switch stays in Settings."""
+        """Record the chosen effect. Picking one turns the effects on; None turns them off.
+
+        The menu used to change only the style and leave the hidden master switch off, so
+        choosing Glow Sweep, Fluid Blobs or Neon Border did nothing visible.
+        """
         self.animation_style = style
         self.settings['animation_style'] = style
+        self.settings['decorative_effects_enabled'] = style != 'None'
         self.apply_visual_preferences()
         self.save_settings()
         self.update()

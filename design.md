@@ -139,7 +139,7 @@ The overlay window hugs the island at rest (`overlay_fit.py`), grows once before
 a transition and shrinks after it, because Windows re-uploads the whole
 translucent window for every repaint.
 
-Background decoration is off by default and remains an explicit option. Selected
+Background decoration is off by default; choosing an effect from the menu or Settings turns it on, and None turns it off. Liquid Glass is a see-through shell with a top sheen and a bright rim. Selected
 idle icons and custom GIFs remain independent choices. Springs may overshoot
 once per transition; there are no repeated pulses, loops or restarts on pointer
 movement, and an interrupted transition clears its blur, rise and rim light.

@@ -44,13 +44,17 @@ class AnimationTests(unittest.TestCase):
                 w.update_content()
                 self.assertEqual(w.status_text.text(), 'Tue 2:07 PM')
 
-    def test_background_menu_never_rewrites_the_decorative_preference(self):
+    def test_background_menu_choice_turns_effects_on_and_none_turns_them_off(self):
+        # Choosing an effect used to leave the hidden master switch off, so nothing happened.
         w = self.window()
         w.settings['motion_mode'] = 'full'
         w.settings['decorative_effects_enabled'] = False
         w.set_animation_style('Glow Sweep')
-        self.assertFalse(w.settings['decorative_effects_enabled'])
+        self.assertTrue(w.settings['decorative_effects_enabled'])
         self.assertEqual(w.settings['animation_style'], 'Glow Sweep')
+        self.assertTrue(w.decorative_motion)
+        w.set_animation_style('None')
+        self.assertFalse(w.settings['decorative_effects_enabled'])
         self.assertFalse(w.decorative_motion)
 
 if __name__ == '__main__':
