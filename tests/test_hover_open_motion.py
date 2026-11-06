@@ -8,6 +8,11 @@ import ignite_motion as ignite
 
 
 class HoverOpenMotionTests(unittest.TestCase):
+    def go(self, w, state):
+        if test_hover.APP.focusWidget():
+            test_hover.APP.focusWidget().clearFocus()  # focus inside the island keeps it open on purpose
+        w.change_state(state)
+
     def window(self):
         helper = test_hover.HoverTests()
         window = helper.window()
@@ -28,7 +33,7 @@ class HoverOpenMotionTests(unittest.TestCase):
         return samples
 
     def to_edge_line(self, w):
-        w.change_state('Hidden')
+        self.go(w, 'Hidden')
         self.assertTrue(settle.settle_shell(w))
         self.assertEqual((w.island_w, w.island_h), (96, 4))
         self.assertEqual(w.get_island_rect().top(), 0)
@@ -37,9 +42,9 @@ class HoverOpenMotionTests(unittest.TestCase):
         for hold_ms in (0, 30, 90, 160):
             w = self.window()
             self.to_edge_line(w)
-            w.change_state('Idle')
+            self.go(w, 'Idle')
             QTest.qWait(hold_ms)
-            w.change_state('Hover')
+            self.go(w, 'Hover')
             samples = self.frames(w, 900)
             self.assertTrue(settle.settle_shell(w))
             ys = [y for _, _, y in samples] + [w.get_island_rect().top()]
@@ -52,10 +57,10 @@ class HoverOpenMotionTests(unittest.TestCase):
         for hold_ms in (0, 30, 90):
             w = self.window()
             self.to_edge_line(w)
-            w.change_state('Idle')
+            self.go(w, 'Idle')
             QTest.qWait(hold_ms)
             start = (w.island_w, w.island_h)
-            w.change_state('Hover')
+            self.go(w, 'Hover')
             samples = self.frames(w, 260)
             self.assertTrue(samples)
             self.assertGreaterEqual(min(h for _, h, _ in samples), min(start[1], 4) - 1, ('height collapsed', hold_ms))
@@ -68,12 +73,12 @@ class HoverOpenMotionTests(unittest.TestCase):
 
     def test_squash_only_applies_to_a_settled_pill(self):
         w = self.window()
-        w.change_state('Hover')
+        self.go(w, 'Hover')
         self.assertTrue(settle.settle_shell(w))
-        w.change_state('Idle')
+        self.go(w, 'Idle')
         self.assertTrue(settle.settle_shell(w))
         self.assertEqual((w.island_w, w.island_h), (w.IDLE_W, w.IDLE_H))
-        w.change_state('Hover')
+        self.go(w, 'Hover')
         samples = self.frames(w, ignite.SQUASH_OPEN['squash'] - 10)
         self.assertTrue(samples)
         self.assertLess(min(width for width, _, _ in samples), w.IDLE_W)  # the squash is still there
@@ -81,7 +86,7 @@ class HoverOpenMotionTests(unittest.TestCase):
 
     def test_motion_snapshot_is_transparent_so_no_grey_panel_flashes(self):
         w = self.window()
-        w.change_state('Hover')
+        self.go(w, 'Hover')
         self.assertTrue(settle.settle_shell(w))
         layer = w.content_layer
         layer.capture()
@@ -98,9 +103,9 @@ class HoverOpenMotionTests(unittest.TestCase):
         for style in ('Default', 'Notch Nook'):
             w = self.window()
             w.island_style = style
-            w.change_state('Hover')
+            self.go(w, 'Hover')
             self.assertTrue(settle.settle_shell(w))
-            w.change_state('Idle')
+            self.go(w, 'Idle')
             samples = self.frames(w, 700)
             self.assertTrue(settle.settle_shell(w))
             self.assertGreaterEqual(min(h for _, h, _ in samples), w.IDLE_H - 2, (style, 'height collapsed'))
