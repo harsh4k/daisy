@@ -87,8 +87,7 @@ class NotificationMonitor(QThread):
                 current_ids = {n.id for n in notifications}
                 if known_ids is None:
                     known_ids = current_ids
-                    await asyncio.sleep(1.0)
-                    continue
+                    continue  # poll again at once; the sleep below paces the loop
                 for n in notifications:
                     if n.id not in known_ids:
                         known_ids.add(n.id)
