@@ -1,7 +1,13 @@
 """Bounded transport commands tied to the exact selected session and track."""
 import asyncio
 import math
-from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionPlaybackStatus as Status
+try:
+    from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionPlaybackStatus as Status
+except (ImportError, AttributeError):
+    class Status:
+        PLAYING = 4
+        PAUSED = 5
+        STOPPED = 0
 
 
 def session_capabilities(session):

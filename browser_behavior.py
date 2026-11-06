@@ -31,7 +31,7 @@ class BrowserGuard:
                     self._browser = self.process_name(pid).casefold() in (
                         'chrome.exe', 'brave.exe', 'msedge.exe', 'firefox.exe',
                         'opera.exe', 'vivaldi.exe', 'arc.exe')
-            if self._browser:
+            if self._browser and hasattr(ctypes, 'windll'):
                 self._browser_hwnd = ctypes.windll.user32.GetForegroundWindow()
             return self._browser
         except (psutil.Error, OSError, AttributeError):
@@ -41,6 +41,8 @@ class BrowserGuard:
     def restore_focus(self):
         """Return intentional panel focus only when Daisy still owns it."""
         try:
+            if not hasattr(ctypes, 'windll'):
+                return
             user32 = ctypes.windll.user32
             user32.IsWindow.argtypes = [wintypes.HWND]
             user32.SetForegroundWindow.argtypes = [wintypes.HWND]

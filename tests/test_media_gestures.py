@@ -8,7 +8,7 @@ os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtTest import QTest
 from PyQt6.QtWidgets import QApplication
-from dashboard_panel import DashboardPanel
+from music_page import MusicPage
 from media_monitor import MediaMonitor
 from test_media import Manager
 from test_media_polish import ControlledSession
@@ -18,7 +18,7 @@ APP = QApplication.instance() or QApplication([])
 
 class MetadataGestureTests(unittest.IsolatedAsyncioTestCase):
     async def test_slow_new_cover_cancels_old_drag_before_any_new_seek(self):
-        monitor, panel = MediaMonitor(), DashboardPanel()
+        monitor, panel = MediaMonitor(), MusicPage()
         monitor.loop = asyncio.get_running_loop()
         session = ControlledSession()
         monitor.manager = Manager([session], session)
@@ -61,7 +61,7 @@ class MetadataGestureTests(unittest.IsolatedAsyncioTestCase):
 
 class GrooveGestureTests(unittest.TestCase):
     def test_groove_click_submits_once_and_poll_does_not_fight_pressed_gesture(self):
-        panel = DashboardPanel()
+        panel = MusicPage()
         self.addCleanup(panel.close)
         panel.show()
         panel.update_media('Playing', 'Track', 'Artist', '')

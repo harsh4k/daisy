@@ -106,9 +106,9 @@ class OverlayUpgradeMixin:
             self._timer_compact = active
             if self.current_state == 'Idle':
                 self.execute_liquid_transition()
-        if len(self.nav_buttons) > 4:
+        if hasattr(self, 'tab_bar'):
             pending = self.tools_panel.completion_pending
-            self.nav_buttons[4].setToolTip('Tools — timer complete' if pending else 'Tools')
+            self.tab_bar.button('tools').setToolTip('Tools — timer complete' if pending else 'Tools')
         self.update_content()
 
     def on_timer_completed(self):
@@ -119,14 +119,14 @@ class OverlayUpgradeMixin:
 
     def update_media_sources(self, sources):
         self._media_sources = sources
-        self.dashboard.set_sources(sources)
+        self.music_page.set_sources(sources)
 
     def choose_media_source(self, source):
         old = self.settings['preferred_media_source']
         self.settings['preferred_media_source'] = source
         if not self.save_settings():
             self.settings['preferred_media_source'] = old
-            self.dashboard.set_preferred_source(old)
+            self.music_page.set_preferred_source(old)
             return
         if hasattr(self.media_monitor, 'set_preferred_source'):
             self.media_monitor.set_preferred_source(source)
@@ -148,7 +148,8 @@ class OverlayUpgradeMixin:
         self.app_policy.set_rules(settings['app_rules'])
         self.setStyleSheet(get_stylesheet(theme=self.theme))
         self.dashboard.set_theme(self.theme)
-        self.dashboard.set_preferred_source(settings['preferred_media_source'])
+        self.music_page.set_theme(self.theme)
+        self.music_page.set_preferred_source(settings['preferred_media_source'])
         self.tools_panel.set_theme(self.theme)
         self.tools_panel.minutes.setValue(settings['timer_default_minutes'])
         if hasattr(self.media_monitor, 'set_preferred_source'):

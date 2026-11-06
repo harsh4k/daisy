@@ -46,8 +46,11 @@ class AutoHideTests(unittest.TestCase):
             with patch.object(test_hover.main.QCursor, 'pos', return_value=top):
                 w.check_mouse_position()
             test_hover.QTest.qWait(280)
-            self.assertEqual(w.current_state, 'Hover')
+            self.assertEqual(w.current_state, 'Idle')
             self.assertFalse(w.content_container.isHidden())
+            test_hover.QTest.mouseClick(w.island_root, test_hover.main.Qt.MouseButton.LeftButton)
+            test_hover.QTest.qWait(280)
+            self.assertEqual(w.current_state, 'Hover')
 
     def test_ten_seconds_without_daisy_interaction_hides(self):
         from idle_behavior import IdleBehavior

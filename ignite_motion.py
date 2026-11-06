@@ -108,11 +108,21 @@ def _clock(duration, on_value):
     return clock
 
 
-def size_animation(window, start, end, profile):
+Y_MS = 240
+
+
+def island_y(start_y, end_y, ms):
+    """The island's top edge: an interrupted transition eases it home, never snaps."""
+    return end_y + (start_y - end_y) * (1 - min(1., max(0., ms / Y_MS))) ** 3
+
+
+def size_animation(window, start, end, profile, start_y=None, end_y=None):
     """One linear clock drives both axes, so they start and finish together."""
     total = total_ms(profile)
 
     def step(p):
+        if start_y is not None and end_y is not None and start_y != end_y:
+            window._island_y = island_y(start_y, end_y, p * total)
         width, height = shell_size(start, end, p * total, profile)
         # The overshoot never leaves the window, which is already clamped to the screen.
         width = min(round(width), window.width())

@@ -1,6 +1,10 @@
 import asyncio
 from PyQt6.QtCore import QThread, pyqtSignal
-from winsdk.windows.ui.notifications.management import UserNotificationListener, UserNotificationListenerAccessStatus
+try:
+    from winsdk.windows.ui.notifications.management import UserNotificationListener, UserNotificationListenerAccessStatus
+except (ImportError, AttributeError):
+    UserNotificationListener = None
+    UserNotificationListenerAccessStatus = None
 
 from notification_inbox import NotificationRecord
 
@@ -45,7 +49,11 @@ class NotificationMonitor(QThread):
 
     async def setup_listener(self):
         try:
-            from winsdk.windows.foundation.metadata import ApiInformation
+            try:
+                from winsdk.windows.foundation.metadata import ApiInformation
+            except (ImportError, AttributeError):
+                self.access_changed.emit('Notification listener is not supported on this platform.')
+                return
             if not ApiInformation.is_type_present("Windows.UI.Notifications.Management.UserNotificationListener"):
                 self.access_changed.emit('This Windows build does not publish notifications to listeners.')
                 return

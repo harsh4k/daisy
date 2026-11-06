@@ -13,10 +13,11 @@ MOTION = dict(open=260, close=200, close_fade=80, reveal=120,
 # Callout 12, Footnote 11. The large timer keeps its 32 px display role.
 _ROLES = dict(display=(32, 600), section=(17, 600), title=(13, 600),
               body=(13, 400), secondary=(12, 400), time=(11, 400),
-              compact=(13, 600), caption=(11, 400), metric=(12, 400))
+              compact=(13, 600), caption=(11, 400), metric=(12, 400),
+              header=(15, 400), header_time=(15, 700), tab=(14, 600))
 # Apple tightens larger text; Inter needs the same to read like SF at size.
 _TRACKING = {32: -.6, 17: -.25}
-NUMERIC = ('time', 'compact', 'display', 'metric')
+NUMERIC = ('time', 'compact', 'display', 'metric', 'header_time')
 
 
 def concentric(outer, inset):

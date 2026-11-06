@@ -36,7 +36,7 @@ class VisualShellTests(unittest.TestCase):
         w = self.window({'motion_mode':'reduced', 'idle_icon':'Daisy', 'decorative_effects_enabled':True})
         self.assertTrue(hasattr(w, 'apply_visual_preferences'))
         w.change_state('Hover')
-        self.assertEqual((w.island_w, w.island_h), (624, 272))
+        self.assertEqual((w.island_w, w.island_h), (624, 284))
         self.assertFalse(w.anim_timer.isActive())
         self.assertFalse(w.status_icon.loop_timer.isActive())
         self.assertEqual(w.settings['idle_icon'], 'Daisy')

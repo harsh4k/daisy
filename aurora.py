@@ -77,14 +77,14 @@ def paint_orb(painter, center, radius, seconds, tint):
     painter.restore()
 
 
-def bar_levels(seconds, count=4):
+def bar_levels(seconds, count=6):
     """Lively, never-repeating heights in 0..1 from a few incommensurate waves."""
     levels = []
     for index in range(count):
         wave = (math.sin(seconds * (5.1 + index * 1.7) + index * 1.3) * .5
                 + math.sin(seconds * (8.3 + index * .9) + index * 2.7) * .3
                 + math.sin(seconds * (2.3 + index * .5)) * .2)
-        levels.append(.5 + .5 * wave)
+        levels.append(max(0., min(1., .5 + .5 * wave)))
     return levels
 
 
@@ -92,14 +92,14 @@ def paint_bars(painter, rect, levels, tint, strength=1.):
     """Rounded bars rising from the centre line, lighter at the tips."""
     base = vivid(tint)
     count = len(levels)
-    width, gap = 2.6, 2.2
+    width, gap = 2.4, 2.0
     total = count * width + (count - 1) * gap
     left = rect.center().x() - total / 2
     painter.save()
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
     painter.setPen(Qt.PenStyle.NoPen)
     for index, level in enumerate(levels):
-        height = max(width, (3 + 11 * level) * min(1., rect.height() / 16))
+        height = max(width, (3 + 12 * level) * min(1., rect.height() / 16))
         bar = QRectF(left + index * (width + gap), rect.center().y() - height / 2, width, height)
         fill = QLinearGradient(bar.topLeft(), bar.bottomLeft())
         fill.setColorAt(0., _alpha(base.lighter(130), strength))
@@ -140,11 +140,11 @@ class AudioBars(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedSize(22, 22)
+        self.setFixedSize(26, 22)
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.setAccessibleName('Now playing')
         self.state = 'Idle'
-        self.tint = QColor('#c1b7d4')
+        self.tint = QColor('#FF3B5C')
         self.reduced_motion = False
         self._start = time.monotonic()
         self.timer = QTimer(self)
@@ -183,10 +183,10 @@ class AudioBars(QWidget):
     def paintEvent(self, _event):
         painter = QPainter(self)
         if self.state == 'Playing' and not self.reduced_motion:
-            levels = bar_levels(time.monotonic() - self._start)
+            levels = bar_levels(time.monotonic() - self._start, count=6)
             strength = 1.
         else:
-            levels = [.35, .6, .45, .3]
+            levels = [.35, .55, .75, .6, .45, .3]
             strength = .55 if self.state == 'Paused' else 1.
         paint_bars(painter, QRectF(self.rect()), levels, self.tint, strength)
         painter.end()

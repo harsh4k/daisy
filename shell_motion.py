@@ -25,6 +25,7 @@ class ShellMotion(QObject):
     def cancel(self):
         self.generation += 1
         self.target = None
+        self.window._island_y = None
         self.group.stop()
         ignite.settle(self.window)
         self.window.content_layer.release()
@@ -44,9 +45,11 @@ class ShellMotion(QObject):
     def _fade(self, start, end, duration, easing=OUT_CUBIC):
         return self._clock(duration, easing, self.window.content_layer.setOpacity, start, end)
 
-    def _eased_size(self, start, end, duration):
+    def _eased_size(self, start, end, duration, start_y=None, end_y=None):
         window = self.window
         def step(p):
+            if start_y is not None and end_y is not None and start_y != end_y:
+                window._island_y = start_y + (end_y - start_y) * p
             window.set_island_size(round(start[0] + (end[0] - start[0]) * p),
                                    round(start[1] + (end[1] - start[1]) * p))
         return self._clock(duration, OUT_CUBIC, step)
@@ -74,6 +77,9 @@ class ShellMotion(QObject):
             def run():
                 if generation == self.generation:
                     apply()
+                    window.island_root.show()
+                    window.content_container.setVisible(window.current_state != 'Hidden')
+                    window.content_layout.activate()
                     layer.capture()
                     if reveal is None:
                         layer.setOpacity(0.)
@@ -83,6 +89,7 @@ class ShellMotion(QObject):
 
         def finish():
             if generation == self.generation:
+                window._island_y = None
                 layer.release()
                 apply()
                 layer.setOpacity(1.)
@@ -94,6 +101,7 @@ class ShellMotion(QObject):
         except TypeError:
             pass
         if reduced:
+            window._island_y = None
             layer.release()
             apply()
             window.set_island_size(*size)
@@ -119,20 +127,41 @@ class ShellMotion(QObject):
         start = (window.island_w, window.island_h)
         # After launch or a cancel there is no previous target; the pill's height says it.
         was_pill = previous == 'Idle' if old is not None else abs(start[1] - window.IDLE_H) <= 8
-        from_pill = was_pill and state in ('Hover', 'Notify')
+        # The squash only reads as a squash on a settled pill. Squeezing a half-open
+        # pill (or the edge line) makes the island shrink and vanish before it opens.
+        settled = start[1] >= window.IDLE_H - 4 and start[0] >= window.IDLE_W - 6
+        from_pill = was_pill and settled and state in ('Hover', 'Notify')
         springy = not (edge or page) and (old is not None or from_pill)
         # The card decides first, so the overlay can make room for it too.
         card = window.card_motion(state, previous, reduced=False)
         # Room for both shapes before the first frame; the overlay never resizes mid-motion.
         overlay_fit.grow_for(window, start, size, springy)
+        # The island's real top edge: an interrupted transition leaves it mid-way, and a
+        # transition that has not drawn a frame yet is still where its own start put it.
+        start_y = getattr(window, '_island_y', None)
+        if start_y is None:
+            start_y = 0 if (previous == 'Hidden' or window.island_style == 'Notch Nook') else 10
+        end_y = 0 if (state == 'Hidden' or window.island_style == 'Notch Nook') else 10
+        window._island_y = start_y
         if springy:
             growing = size[0] * size[1] >= start[0] * start[1]
             profile = (ignite.SQUASH_OPEN if from_pill else ignite.OPEN) if growing else ignite.CLOSE
-            geometry = ignite.size_animation(window, start, size, profile)
+            geometry = ignite.size_animation(window, start, size, profile, start_y, end_y)
         else:
-            geometry = self._eased_size(start, size, duration)
+            geometry = self._eased_size(start, size, duration, start_y, end_y)
 
-        if fade_close:
+        if restoring:
+            apply()
+            window.island_root.show()
+            window.content_container.setVisible(True)
+            window.content_layout.activate()
+            layer.capture()
+            layer.setOpacity(0.)
+            sequence = QSequentialAnimationGroup()
+            sequence.addAnimation(self._fade(0., 1., duration, OUT_CUBIC))
+            self.group.addAnimation(geometry)
+            self.group.addAnimation(sequence)
+        elif fade_close:
             layer.capture()
             sequence = QSequentialAnimationGroup()
             fade = self._fade(layer.opacity(), 0., MOTION['close_fade'], IN_CUBIC)

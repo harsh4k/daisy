@@ -104,7 +104,7 @@ class DesignTests(test_hover.HoverTests):
         from ui_tokens import stable_digits
         w = self.window()
         labels = [w.status_text, w.cpu_label, w.ram_label,
-                  w.dashboard.elapsed, w.dashboard.duration]
+                  w.music_page.elapsed, w.music_page.duration]
         labels += list(w.system_card.metric_values.values())
         labels += [w.net_down_L, w.net_up_L, w.tools_panel.time_text]
         for label in labels:

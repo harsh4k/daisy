@@ -2,7 +2,10 @@ import asyncio
 import re
 import requests
 from PyQt6.QtCore import QThread, pyqtSignal
-from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager
+try:
+    from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager
+except (ImportError, AttributeError):
+    GlobalSystemMediaTransportControlsSessionManager = None
 from media_sessions import playback_state, select_session, timeline_seconds, read_artwork, DaemonMediaRequest, available_sources
 from media_transport import MediaTransport, session_capabilities
 

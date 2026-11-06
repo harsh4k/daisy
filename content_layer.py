@@ -5,8 +5,9 @@ drawn inside the island's anti-aliased outline. Nothing re-lays out, no widget
 is re-rendered through a graphics effect, and only the island area repaints.
 At rest the live widgets return, untouched.
 """
-from PyQt6.QtCore import QEvent, Qt
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import QEvent, QPoint, QSize, Qt
+from PyQt6.QtGui import QPixmap, QRegion
+from PyQt6.QtWidgets import QApplication, QWidget
 
 SOFTEN = 6  # downscale factor for the cheap blur used while content arrives
 
@@ -21,6 +22,21 @@ def _soften(pixmap):
                         Qt.TransformationMode.SmoothTransformation)
     soft.setDevicePixelRatio(pixmap.devicePixelRatio())
     return soft
+
+
+def picture(widget):
+    """The widget and its children on a transparent pixmap.
+
+    QWidget.grab() paints the widget's own background as the window colour, which
+    is opaque (dark grey in dark mode, white in light mode). Drawn inside the black
+    island, that showed as a grey panel for the length of every transition.
+    """
+    ratio = widget.devicePixelRatioF()
+    result = QPixmap(QSize(round(widget.width() * ratio), round(widget.height() * ratio)))
+    result.setDevicePixelRatio(ratio)
+    result.fill(Qt.GlobalColor.transparent)
+    widget.render(result, QPoint(), QRegion(), QWidget.RenderFlag.DrawChildren)
+    return result
 
 
 class ContentLayer:
@@ -72,7 +88,7 @@ class ContentLayer:
         if not container.isHidden():
             window.content_layout.activate()
             QApplication.sendPostedEvents(None, QEvent.Type.LayoutRequest)
-            self.pixmap = container.grab()
+            self.pixmap = picture(container)
             self.soft = _soften(self.pixmap)
             self.width = container.width()
         self.active = True

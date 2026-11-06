@@ -76,7 +76,7 @@ class PillDesignTests(unittest.TestCase):
         outline = w.notch_outline(rect).boundingRect()
         self.assertAlmostEqual(outline.width(), 180 + 2 * w.NOTCH_EAR, places=3)
         self.assertEqual(w.get_current_radius(), 12.)
-        w.set_island_size(624, 272)
+        w.set_island_size(624, 284)
         self.assertEqual(w.get_current_radius(), 28.)
 
     def test_bar_levels_stay_in_range_and_keep_moving(self):

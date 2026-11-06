@@ -5,8 +5,15 @@ import io
 import math
 import threading
 from PIL import Image
-from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionPlaybackStatus as Status
-from winsdk.windows.storage.streams import DataReader
+try:
+    from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionPlaybackStatus as Status
+    from winsdk.windows.storage.streams import DataReader
+except (ImportError, AttributeError):
+    class Status:
+        PLAYING = 4
+        PAUSED = 5
+        STOPPED = 0
+    DataReader = None
 
 
 class DaemonMediaRequest:

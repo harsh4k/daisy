@@ -13,14 +13,14 @@ class ScrubberTests(unittest.TestCase):
 
     def playing(self, w):
         w.change_state('Hover')
-        w.select_feature('dashboard')
+        w.select_feature('music')
         test_hover.APP.processEvents()
-        w.dashboard.update_media('Playing', 'Track', 'Artist', '')
-        w.dashboard.set_capabilities({'previous': True, 'play_pause': True,
+        w.music_page.update_media('Playing', 'Track', 'Artist', '')
+        w.music_page.set_capabilities({'previous': True, 'play_pause': True,
                                       'next': True, 'seek': True})
-        w.dashboard.update_timeline(63, 240)
+        w.music_page.update_timeline(63, 240)
         test_hover.APP.processEvents()
-        return w.dashboard.progress
+        return w.music_page.progress
 
     def test_scrubber_is_neutral_and_not_the_brand_accent(self):
         w = self.window({'motion_mode': 'reduced'})

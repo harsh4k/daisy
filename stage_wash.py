@@ -1,6 +1,6 @@
 """The light each open-island page brings with it, painted behind its content.
 
-Now glows in the album's colour (or the accent), Weather in sky and sun, Tasks in
+Music glows in the album's colour (or the accent), Weather in sky and sun, Tasks in
 a faint accent, Calendar in night blue and Tools in amber. Changing page
 crossfades the two washes; reduced motion switches at once.
 """
@@ -20,6 +20,8 @@ def spots(window, page):
     """(colour, x, y, radius as a share of width, strength) for each light."""
     t = window.theme
     if page == 'dashboard':
+        return ()  # Home is true black: its cards carry the colour
+    if page == 'music':
         tint = window.ambient_tint()
         return ((QColor(tint), .2, .45, .42, .5), (_companion(tint), .34, .82, .3, .3))
     if page == 'weather':

@@ -8,7 +8,7 @@ from tools_panel import ToolsPanel
 class CompactToolsTests(unittest.TestCase):
     def panel(self, width=576):
         panel = ToolsPanel([])
-        panel.resize(width, 208)
+        panel.resize(width, 196)
         panel.show()
         self.addCleanup(panel.close)
         test_hover.APP.processEvents()
@@ -21,7 +21,7 @@ class CompactToolsTests(unittest.TestCase):
     def test_timer_all_actions_fit_without_scrolling(self):
         for width in (500, 576):
             panel = self.panel(width)
-            self.assertLessEqual(panel.minimumSizeHint().height(), 208)
+            self.assertLessEqual(panel.minimumSizeHint().height(), 196)
             for child in (panel.time_text, panel.state_text, panel.minutes,
                           panel.start_button, panel.pause_button, panel.reset_button):
                 self.assert_inside(panel, child)

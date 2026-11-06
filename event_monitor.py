@@ -3,7 +3,6 @@ import time
 from PyQt6.QtCore import QThread, pyqtSignal
 
 class KeyLockMonitor(QThread):
-                              
     lock_changed = pyqtSignal(str, bool)
 
     def __init__(self, parent=None):
@@ -13,12 +12,20 @@ class KeyLockMonitor(QThread):
         self.last_num = self.get_num_lock()
 
     def get_caps_lock(self):
-                           
-        return (ctypes.windll.user32.GetKeyState(0x14) & 1) != 0
+        try:
+            if hasattr(ctypes, 'windll'):
+                return (ctypes.windll.user32.GetKeyState(0x14) & 1) != 0
+        except Exception:
+            pass
+        return False
 
     def get_num_lock(self):
-                           
-        return (ctypes.windll.user32.GetKeyState(0x90) & 1) != 0
+        try:
+            if hasattr(ctypes, 'windll'):
+                return (ctypes.windll.user32.GetKeyState(0x90) & 1) != 0
+        except Exception:
+            pass
+        return False
 
     def run(self):
         while self._is_running:
@@ -32,7 +39,7 @@ class KeyLockMonitor(QThread):
                 self.last_num = num
                 self.lock_changed.emit("Num Lock", num)
 
-            time.sleep(0.02)
+            time.sleep(0.05)  # 20 Hz is plenty for a lock light, and a third of the wakeups
 
     def stop(self):
         self._is_running = False

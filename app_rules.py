@@ -31,6 +31,8 @@ def normalize_rules(value):
 
 
 def _user32():
+    if not hasattr(ctypes, 'windll'):
+        return None
     api = ctypes.windll.user32
     api.GetForegroundWindow.restype = wintypes.HWND
     api.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
@@ -40,14 +42,20 @@ def _user32():
 
 
 def _window_pid(hwnd):
+    user = _user32()
+    if not user:
+        return 0
     pid = wintypes.DWORD()
     if hwnd:
-        _user32().GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        user.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
     return pid.value
 
 
 def _foreground():
-    hwnd = _user32().GetForegroundWindow()
+    user = _user32()
+    if not user:
+        return None, 0
+    hwnd = user.GetForegroundWindow()
     return hwnd, _window_pid(hwnd)
 
 

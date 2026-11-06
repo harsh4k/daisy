@@ -16,7 +16,7 @@ class CardCompositionTests(unittest.TestCase):
         w.select_feature('calendar')
         QApplication.processEvents()
         # The card keeps its size, so the long list scrolls inside it.
-        self.assertEqual(w.calendar_panel.height(), 208)
+        self.assertEqual(w.calendar_panel.height(), 196)
         self.assertEqual(w.feature_scroll.verticalScrollBar().maximum(), 0)
         bar = w.tasks_scroll.verticalScrollBar()
         bar.setValue(bar.maximum())
@@ -25,7 +25,7 @@ class CardCompositionTests(unittest.TestCase):
         QApplication.processEvents()
         viewport = w.feature_scroll.viewport()
         self.assertEqual(w.tasks_scroll.verticalScrollBar().value(), 0)
-        self.assertEqual(w.calendar_panel.height(), 208)
+        self.assertEqual(w.calendar_panel.height(), 196)
         for control in (w.edit_name, w.edit_time, w.edit_cat):
             self.assertTrue(viewport.rect().contains(QRect(control.mapTo(viewport, QPoint()), control.size())))
 
@@ -46,7 +46,7 @@ class CardCompositionTests(unittest.TestCase):
         w.open_task_editor()
         self.assertTrue(settle.settle_shell(w))
         QApplication.processEvents()
-        self.assertEqual(w.calendar_panel.height(), 208)
+        self.assertEqual(w.calendar_panel.height(), 196)
         self.assertEqual(w.feature_scroll.verticalScrollBar().maximum(), 0)
         for button in w.task_edit_widget.findChildren(QPushButton):
             self.assertTrue(w.task_edit_widget.rect().contains(
