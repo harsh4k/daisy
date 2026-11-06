@@ -21,7 +21,7 @@ class OverlayGeometryTests(unittest.TestCase):
                     w.update_content()
                 test_hover.APP.processEvents()
                 icon = QRect(w.status_icon.mapTo(w, QPoint()), w.status_icon.size())
-                text = QRect(w.status_text.mapTo(w, QPoint()), w.status_text.size())
+                text = QRect(w.pill_face().mapTo(w, QPoint()), w.pill_face().size())
                 group = icon.united(text).united(QRect(w.trailing_slot.mapTo(w, QPoint()), w.trailing_slot.size()))  # leading slot, clock, trailing slot
                 shell = w.get_island_rect()
                 self.assertLessEqual(abs(group.center().x() - shell.center().x()), 1)
@@ -37,7 +37,7 @@ class OverlayGeometryTests(unittest.TestCase):
                     shell = w.get_island_rect().toAlignedRect()
                     self.assertEqual(w.current_state, 'Idle')
                     self.assertEqual(w.island_root.geometry(), shell)
-                    text = QRect(w.status_text.mapTo(w, QPoint()), w.status_text.size())
+                    text = QRect(w.pill_face().mapTo(w, QPoint()), w.pill_face().size())
                     self.assertTrue(shell.contains(text), (shell, text))
 
     def test_native_host_rounding_is_disabled_when_shown(self):

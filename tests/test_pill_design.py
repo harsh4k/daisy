@@ -64,7 +64,7 @@ class PillDesignTests(unittest.TestCase):
             shell = w.get_island_rect()
             orb = self.rect_of(w, w.status_icon)
             trailing = self.rect_of(w, w.trailing_slot)
-            text = self.rect_of(w, w.status_text)
+            text = self.rect_of(w, w.pill_face())
             self.assertEqual(orb.size(), trailing.size())
             self.assertLessEqual(abs((orb.left() - shell.left()) - (shell.right() - trailing.right())), 1.5)
             self.assertLessEqual(abs(text.center().x() - shell.center().x()), 1.5)

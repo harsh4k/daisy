@@ -59,7 +59,7 @@ class BatteryTests(unittest.TestCase):
         self.assertTrue(w.battery_indicator.isVisible())
         self.assertEqual(w.battery_indicator.text(), '42%')
         icon = QRect(w.status_icon.mapTo(w, QPoint()), w.status_icon.size())
-        text = QRect(w.status_text.mapTo(w, QPoint()), w.status_text.size())
+        text = QRect(w.pill_face().mapTo(w, QPoint()), w.pill_face().size())
         group = icon.united(text).united(QRect(w.trailing_slot.mapTo(w, QPoint()), w.trailing_slot.size()))  # leading slot, clock, trailing slot
         shell = w.get_island_rect()
         self.assertLessEqual(abs(group.center().x() - shell.center().x()), 1,

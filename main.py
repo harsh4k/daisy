@@ -1253,6 +1253,10 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
                 upcoming.append((when, task['name'], task['time']))
         return [(name, time) for _, name, time in sorted(upcoming)]
 
+    def pill_face(self):
+        """What sits at the centre of the compact pill: the clock text with a timer, else the eyes."""
+        return self.status_text if self.status_text.isVisible() else self.daisy_eyes
+
     def update_content(self):
         if hasattr(self, 'tools_panel'):
             self.tools_panel.tick()
@@ -1274,9 +1278,11 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
                 media_active = self.media_state in ('Playing', 'Paused')
                 self.album_art_thumb.setVisible(media_active)
                 self.status_icon.setVisible(not media_active)
-                self.daisy_eyes.setVisible(media_active)
-                self.status_text.setVisible(not media_active)
-                self.daisy_eyes.set_active(self.media_state == 'Playing' and not self.game_suspended)
+                # The eyes are the pill's face: always there, centred between the orb and the
+                # bars. The clock text only appears with a running focus timer.
+                self.daisy_eyes.setVisible(True)
+                self.status_text.setVisible(not media_active and bool(timer_text))
+                self.daisy_eyes.set_active(not self.game_suspended)
                 self.daisy_eyes.set_ambient_tint(self.ambient_tint())
         elif self.current_state == 'Hover':
             self.refresh_stage_status()

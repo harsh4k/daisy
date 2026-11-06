@@ -49,7 +49,7 @@ class NotificationExpansionTests(unittest.TestCase):
             self.assertTrue(settle.settle_shell(w))
             self.assertEqual(w.current_state, 'Idle')
             icon = QRect(w.status_icon.mapTo(w, QPoint()), w.status_icon.size())
-            text = QRect(w.status_text.mapTo(w, QPoint()), w.status_text.size())
+            text = QRect(w.pill_face().mapTo(w, QPoint()), w.pill_face().size())
             self.assertLessEqual(abs(icon.united(text).united(QRect(w.trailing_slot.mapTo(w, QPoint()), w.trailing_slot.size())).center().x() - w.get_island_rect().center().x()), 1)
             self.assertEqual(w.status_text.toolTip(), '')
 

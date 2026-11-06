@@ -49,5 +49,5 @@ class UiRegressionTests(unittest.TestCase):
             self.assertFalse(w.battery_indicator.isVisible())
             self.assertGreaterEqual(w.status_text.width(), w.status_text.fontMetrics().horizontalAdvance(w.status_text.text()))
             icon = QRect(w.status_icon.mapTo(w, QPoint()), w.status_icon.size())
-            text = QRect(w.status_text.mapTo(w, QPoint()), w.status_text.size())
+            text = QRect(w.pill_face().mapTo(w, QPoint()), w.pill_face().size())
             self.assertLessEqual(abs(icon.united(text).united(QRect(w.trailing_slot.mapTo(w, QPoint()), w.trailing_slot.size())).center().x() - w.get_island_rect().center().x()), 1)
