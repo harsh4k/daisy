@@ -35,9 +35,11 @@ class SpringMathTests(unittest.TestCase):
         self.assertGreater(w, 180)
         self.assertEqual(h, 40)
 
-    def test_closing_dips_below_the_pill_then_settles(self):
+    def test_closing_never_collapses_below_the_pill_then_settles(self):
         frames = self.timeline((624, 272), (180, 40), ignite.CLOSE)
-        self.assertLess(min(w for w, _ in frames), 180)
+        self.assertGreaterEqual(min(w for w, _ in frames), 180 - 3)
+        self.assertGreaterEqual(min(h for _, h in frames), 40 - 2)
+        self.assertLessEqual(max(h for _, h in frames[len(frames) // 2:]), 40 + 40)
         self.assertEqual(frames[-1], (180, 40))
 
     def test_rim_light_fades_in_holds_and_turns_once(self):

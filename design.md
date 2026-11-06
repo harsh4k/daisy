@@ -124,7 +124,7 @@ stretches sideways before it drops. Overshoot never leaves the window.
 | Rim light | 1150ms, one clockwise turn of the edge in the theme accent, with a soft aura and a top bloom; fades in over 12%, out over the last 30%. Marks arrivals only (a notification opening from the pill); opening the island yourself stays quiet; never loops |
 | Card drop | From 120ms: spring k300 c21 over 560ms from 22px under the island, fading in over the first 60%; lifts away in 200ms ease-in |
 | Resize between open shapes | Same spring without squash or rim; content blurs in from 60ms when the state changes |
-| Close | 80ms content fade, then spring k520 c30/26 with a slight dip below the pill, settled by 420ms |
+| Close | 80ms content fade, then spring k520 c42/44, no dip below the pill, settled by 360ms |
 | Edge line | 220ms OutCubic geometry; indicator remains opaque black |
 | Change feature | 60ms fade out, switch, 100ms fade in |
 | Hover | 100ms subtle feedback, no layout movement |

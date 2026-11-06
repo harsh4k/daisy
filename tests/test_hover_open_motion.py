@@ -94,5 +94,19 @@ class HoverOpenMotionTests(unittest.TestCase):
         self.assertGreater(max(painted), 200, 'the content itself is still in the picture')
 
 
+    def test_closing_never_collapses_below_the_pill(self):
+        for style in ('Default', 'Notch Nook'):
+            w = self.window()
+            w.island_style = style
+            w.change_state('Hover')
+            self.assertTrue(settle.settle_shell(w))
+            w.change_state('Idle')
+            samples = self.frames(w, 700)
+            self.assertTrue(settle.settle_shell(w))
+            self.assertGreaterEqual(min(h for _, h, _ in samples), w.IDLE_H - 2, (style, 'height collapsed'))
+            self.assertGreaterEqual(min(width for width, _, _ in samples), w.IDLE_W - 3, (style, 'width collapsed'))
+            self.assertEqual((w.island_w, w.island_h), (w.IDLE_W, w.IDLE_H))
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -12,7 +12,9 @@ from PyQt6.QtGui import QBrush, QColor, QConicalGradient, QPen, QRadialGradient
 # so the island stretches sideways before it drops. Opening overshoots about 9%.
 OPEN = dict(w=(420., 25.), h=(300., 19.), lag=35, squash=0, settle=620)
 SQUASH_OPEN = dict(OPEN, squash=90)
-CLOSE = dict(w=(520., 30.), h=(520., 26.), lag=0, squash=0, settle=420)
+# Closing is near critically damped: the old k520 c30/26 undershot the pill by 25 px in
+# height (to about 14 px high) and bounced back, which read as a collapse and a pop.
+CLOSE = dict(w=(520., 42.), h=(520., 44.), lag=0, squash=0, settle=360)
 SQUASH_PX = (14, 4)
 REVEAL_DELAY = 190
 REVEAL_MS = 460
