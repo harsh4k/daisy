@@ -10,9 +10,9 @@ APP = QApplication.instance() or QApplication([])
 
 class DashboardTests(unittest.TestCase):
     def panel(self):
-        self.assertIsNotNone(importlib.util.find_spec("music_page"), 'Hover dashboard must exist')
-        from music_page import MusicPage
-        p = MusicPage()
+        self.assertIsNotNone(importlib.util.find_spec('dashboard_panel'), 'Hover dashboard must exist')
+        from dashboard_panel import DashboardPanel
+        p = DashboardPanel()
         p.show()
         APP.processEvents()
         def dispose():
@@ -32,14 +32,21 @@ class DashboardTests(unittest.TestCase):
         self.assertIn('2 KB/s', card.network.text())
         card.deleteLater()
 
-    def test_music_page_fits_its_card(self):
+    def test_music_and_glances_fit_side_by_side(self):
         p = self.panel()
         p.update_media('Playing', 'A very long track title ' * 15, 'Long artist ' * 15, '')
         p.update_timeline(63, 240)
+        p.set_glance('tools', 'Focus', 'Ready · 25 min', '25:00')
         APP.processEvents()
         self.assertEqual(p.elapsed.text(), '1:03')
         self.assertEqual(p.duration.text(), '4:00')
+        self.assertTrue(p.rect().contains(p.glance_column.geometry()))
         self.assertTrue(p.rect().contains(p.media_card.geometry()))
+        self.assertFalse(p.glance_column.geometry().intersects(p.media_card.geometry()))
+        self.assertGreater(p.glance_column.x(), p.media_card.x(), 'music leads, glances sit to its right')
+        for button in p.glances.values():
+            bounds = QRect(button.mapTo(p, QPoint()), button.size())
+            self.assertTrue(p.rect().contains(bounds), button.key)
         self.assertLessEqual(p.title.width(), p.media_card.width())
         self.assertEqual(p.title.toolTip(), 'A very long track title ' * 15)
 
@@ -68,7 +75,7 @@ class DashboardTests(unittest.TestCase):
         self.assertNotEqual(with_badge, without_badge, 'Provider badge must render over the artwork')
         p.source_badge.show()
         self.assertFalse(p.artwork.pixmap().isNull())
-        from music_page import ART
+        from dashboard_panel import ART
         self.assertEqual(p.artwork.width(), ART)
         self.assertGreater(p.play.height(), p.prev.height())
         self.assertGreater(p.prev.geometry().top(), p.duration.geometry().bottom())

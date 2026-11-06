@@ -24,7 +24,7 @@ class TimerVisualTests(unittest.TestCase):
     def test_amber_clock_and_ruler_fit_above_aligned_transport_at_compact_width(self):
         panel = ToolsPanel([])
         self.addCleanup(panel.close)
-        panel.resize(500, 196)
+        panel.resize(500, 208)
         panel.show()
         test_hover.APP.processEvents()
         self.assertIn('timer_accent', get_theme())

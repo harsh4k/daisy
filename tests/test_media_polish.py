@@ -12,7 +12,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtTest import QTest
 from PyQt6.QtWidgets import QApplication, QSlider
 from PIL import Image
-from music_page import MusicPage
+from dashboard_panel import DashboardPanel
 from media_monitor import MediaMonitor
 from media_sessions import select_session
 from test_media import Session, Manager
@@ -195,7 +195,7 @@ class MediaPolishTests(unittest.IsolatedAsyncioTestCase):
 
 class MediaPanelPolishTests(unittest.TestCase):
     def panel(self):
-        panel = MusicPage()
+        panel = DashboardPanel()
         panel.show()
         APP.processEvents()
         self.addCleanup(panel.close)
@@ -221,7 +221,7 @@ class MediaPanelPolishTests(unittest.TestCase):
         data = io.BytesIO()
         Image.new('RGB', (200, 100), 'red').save(data, format='PNG')
         panel.update_artwork(data.getvalue())
-        from music_page import ART
+        from dashboard_panel import ART
         art = panel.artwork.pixmap()
         # A centred square crop, drawn at twice the pixels for crisp rounded corners.
         self.assertEqual((art.width() / art.devicePixelRatio(), art.height() / art.devicePixelRatio()), (ART, ART))

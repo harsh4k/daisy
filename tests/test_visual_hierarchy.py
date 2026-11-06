@@ -4,7 +4,7 @@ os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QFont, QFontMetrics
 from theme_tokens import get_theme
-from music_page import MusicPage
+from dashboard_panel import DashboardPanel
 APP = QApplication.instance() or QApplication([])
 
 class VisualHierarchyTests(unittest.TestCase):
@@ -46,7 +46,7 @@ class VisualHierarchyTests(unittest.TestCase):
             self.assertLessEqual(max(widths) - min(widths), 1, (role, widths))
 
     def test_source_configuration_is_hidden_but_feedback_keeps_its_space(self):
-        panel = MusicPage()
+        panel = DashboardPanel()
         panel.show()
         APP.processEvents()
         self.addCleanup(panel.close)

@@ -22,12 +22,12 @@ class UniformFeatureTests(unittest.TestCase):
             for feature in w.features:
                 w.select_feature(feature)
                 self.assertTrue(settle.settle_shell(w))
-                self.assertEqual((w.island_w, w.island_h), (624, 284), feature)
+                self.assertEqual((w.island_w, w.island_h), (624, 272), feature)
                 self.assertTrue(w.content_container.rect().contains(w.navigation.geometry()))
             w.select_feature('calendar')
             w.open_task_editor()
             self.assertTrue(settle.settle_shell(w))
-            self.assertEqual((w.island_w, w.island_h), (624, 284))
+            self.assertEqual((w.island_w, w.island_h), (624, 272))
             w.open_task_editor()
 
     def test_long_task_list_and_editor_scroll_without_changing_feature(self):
@@ -43,8 +43,8 @@ class UniformFeatureTests(unittest.TestCase):
         from ui_tokens import SPACING
         # The page spans the shell between the macOS 20 px edge insets.
         self.assertEqual((w.calendar_panel_widget.width(), w.calendar_panel_widget.height()),
-                         (624 - 2 * SPACING['outer'], 196))
-        self.assertEqual(w.CALENDAR_H, 196)
+                         (624 - 2 * SPACING['outer'], 208))
+        self.assertEqual(w.CALENDAR_H, 208)
         scroll = w.tasks_scroll
         self.assertGreater(scroll.verticalScrollBar().maximum(), 0)
         QApplication.processEvents()
@@ -74,7 +74,7 @@ class UniformFeatureTests(unittest.TestCase):
         self.assertTrue(settle.settle_shell(w))
         QApplication.processEvents()
         self.assertTrue(w.is_editing_tasks)
-        self.assertEqual(w.calendar_panel_widget.height(), 196)
+        self.assertEqual(w.calendar_panel_widget.height(), 208)
         self.assertEqual(w.edit_list.verticalScrollBarPolicy(),
                          Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         w.edit_name.setText('Added from fixed card')
@@ -82,7 +82,7 @@ class UniformFeatureTests(unittest.TestCase):
         self.assertEqual(w.settings['tasks'][-1]['name'], 'Added from fixed card')
         w.save_and_close_editor()
         self.assertFalse(w.is_editing_tasks)
-        self.assertEqual((w.island_w, w.island_h), (624, 284))
+        self.assertEqual((w.island_w, w.island_h), (624, 272))
 
     def test_tools_primary_controls_fit_with_fixed_navigation(self):
         w = self.window({'motion_mode': 'reduced'})

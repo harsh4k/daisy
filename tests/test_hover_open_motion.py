@@ -64,7 +64,7 @@ class HoverOpenMotionTests(unittest.TestCase):
             for a, b in zip(widths, widths[1:]):
                 self.assertGreaterEqual(b, a - 1, ('width dipped', hold_ms, widths))
             self.assertTrue(settle.settle_shell(w))
-            self.assertEqual((w.island_w, w.island_h), (624, 284))
+            self.assertEqual((w.island_w, w.island_h), (624, 272))
 
     def test_squash_only_applies_to_a_settled_pill(self):
         w = self.window()

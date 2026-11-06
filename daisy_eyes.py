@@ -12,8 +12,7 @@ class DaisyEyes(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        # Tall enough that the glow fades out inside the widget instead of clipping to a box.
-        self.setFixedSize(44, 32)
+        self.setFixedSize(36, 22)
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.setAccessibleName("Daisy Eyes")
 
@@ -160,7 +159,7 @@ class DaisyEyes(QWidget):
 
             # Soft luminous outer glow
             if self._blink_progress < 0.7:
-                glow_r = min(max(rect.width(), rect.height()) * 1.6, self.height() / 2.0 - 1)
+                glow_r = max(rect.width(), rect.height()) * 1.6
                 glow = QRadialGradient(QPointF(ex, ey), glow_r)
                 g_col = QColor(self._glow_color)
                 alpha = int(90 * (1.0 - self._blink_progress))

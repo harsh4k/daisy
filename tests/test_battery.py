@@ -18,9 +18,9 @@ class BatteryTests(unittest.TestCase):
         w.publish_battery({'percent': 87, 'plugged': False, 'secsleft': 3600})
         test_hover.APP.processEvents()
         # The top bar carries the level beside the time, as on a Mac menu bar.
-        self.assertEqual(w.stage_bar.battery_text.text(), '87%')
+        self.assertTrue(w.stage_bar.status.text().startswith('87% · '))
         self.assertTrue(w.stage_bar.battery_icon.isVisible())
-        self.assertIn('87 percent', w.stage_bar.battery_text.accessibleName())
+        self.assertIn('87 percent', w.stage_bar.status.accessibleName())
         # Tools → System keeps the detailed readout.
         card = w.system_card
         self.assertEqual(card.battery_value.text(), '87%')

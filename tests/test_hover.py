@@ -5,7 +5,7 @@ import types
 import unittest
 from unittest.mock import patch
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'
-from PyQt6.QtWidgets import QApplication, QMessageBox, QAbstractButton
+from PyQt6.QtWidgets import QApplication, QMessageBox
 from PyQt6.QtTest import QTest
 from PyQt6.QtCore import QPoint, QRect, QObject, pyqtSignal, QBuffer, QIODevice, QCoreApplication, QEvent
 from PyQt6.QtGui import QImage, QColor
@@ -106,7 +106,7 @@ class HoverTests(unittest.TestCase):
                 w.change_state(state)
                 QTest.qWait(30)
             self.assertTrue(settle.settle_shell(w))
-            self.assertEqual((w.island_w, w.island_h), (624, 284))
+            self.assertEqual((w.island_w, w.island_h), (624, 272))
             self.assertEqual(w.content_container.pos(), QPoint(0, 0))
             self.assertEqual(w.content_container.width(), 624)
             before = w.dashboard.pos()
@@ -120,16 +120,14 @@ class HoverTests(unittest.TestCase):
             self.assertEqual((w.island_w, w.island_h), (180, 40))
             self.assertTrue(w.dashboard.isHidden())
 
-    def test_stage_bar_sits_above_the_page_and_the_tab_bar_below_it(self):
+    def test_stage_bar_sits_above_the_page_with_crumb_status_and_power(self):
         w = self.window()
         w.change_state('Hover')
         self.assertTrue(settle.settle_shell(w))
         self.assertLess(w.navigation.y() + w.navigation.height(), w.feature_scroll.y() + 1)
         self.assertEqual(len(w.power_buttons), 1)
         self.assertFalse(w.power_buttons[0].icon().isNull())
-        self.assertTrue(w.stage_bar.date.text())
-        self.assertTrue(w.stage_bar.status.text())
-        self.assertGreaterEqual(w.tab_bar.y(), w.feature_scroll.y() + w.feature_scroll.height())
+        self.assertEqual(w.stage_bar.crumb.text(), 'Now')
         for button in w.nav_buttons + w.power_buttons:
             self.assertTrue(button.toolTip(), button.accessibleName())
 
@@ -225,13 +223,13 @@ class HoverTests(unittest.TestCase):
              patch.object(main, 'NotificationMonitor', InertMonitor), \
              patch.object(main, 'WeatherMonitor', InertMonitor):
             w.setup_monitors()
-        self.assertEqual(w.music_page.source.text(), 'Spotify')
-        self.assertEqual(w.music_page.elapsed.text(), '1:03')
-        self.assertFalse(w.music_page.artwork.pixmap().isNull())
+        self.assertEqual(w.dashboard.source.text(), 'Spotify')
+        self.assertEqual(w.dashboard.elapsed.text(), '1:03')
+        self.assertFalse(w.dashboard.artwork.pixmap().isNull())
         w.media_monitor.source_updated.emit('SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify')
-        self.assertEqual(w.music_page.source.text(), 'Spotify')
+        self.assertEqual(w.dashboard.source.text(), 'Spotify')
         w.media_monitor.source_updated.emit('Chrome.exe')
-        self.assertEqual(w.music_page.source.text(), 'Browser')
+        self.assertEqual(w.dashboard.source.text(), 'Browser')
 
     def test_source_launch_does_not_change_installed_autostart(self):
         w = self.window()
@@ -287,9 +285,9 @@ class HoverTests(unittest.TestCase):
                 self.assertTrue(w.rect().contains(w.get_island_rect().toAlignedRect()))
                 dashboard = w.dashboard
                 self.assertLessEqual(dashboard.width(), 468)
-                for card in dashboard.glances.values():
-                    self.assertTrue(dashboard.rect().contains(card.geometry()), card.key)
-                for button in dashboard.findChildren(QAbstractButton):
+                self.assertTrue(dashboard.rect().contains(dashboard.media_card.geometry()))
+                self.assertTrue(dashboard.rect().contains(dashboard.glance_column.geometry()))
+                for button in dashboard.findChildren(main.QPushButton):
                     bounds = QRect(button.mapTo(dashboard, QPoint(0, 0)), button.size())
                     self.assertTrue(dashboard.rect().contains(bounds), button.accessibleName())
 

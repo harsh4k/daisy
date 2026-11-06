@@ -34,6 +34,10 @@ Owner: "just change the notch, nothing else". Only phase 1 (motion fix, transpar
 The Home cards, tab bar, header and Music page built in phase 2 were reverted; the reel findings
 above stay as reference. Phase 3 (audit) was not carried further.
 
+## Update
+
+The reel-style Home/tab bar redesign was built, shown to the owner and rejected ("this is bad"). The original Daisy UI is back; only the motion and bug fixes remain.
+
 ## Phases
 
 1. **Motion fix** (`shell_motion.py`, `ignite_motion.py`, `overlay_fit.py`): explicit start y for

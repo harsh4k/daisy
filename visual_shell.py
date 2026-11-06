@@ -64,8 +64,6 @@ def apply_visual_preferences(window):
                                 and not window.reduced_motion)
     window.setStyleSheet(get_stylesheet(theme=window.theme))
     window.dashboard.set_theme(window.theme)
-    window.music_page.set_theme(window.theme)
-    window.tab_bar.set_theme(window.theme)
     window.system_card.set_theme(window.theme)
     window.stage_bar.set_theme(window.theme)
     window.tools_panel.set_theme(window.theme)
@@ -76,7 +74,6 @@ def apply_visual_preferences(window):
         refresh_power_menu(window.power_buttons[0].menu(), window.theme)
     window.status_icon.set_reduced_motion(window.reduced_motion)
     window.daisy_eyes.set_reduced_motion(window.reduced_motion)
-    window.stage_bar.eyes.set_reduced_motion(window.reduced_motion)
     style_legacy_panels(window)
     if window.decorative_motion:
         window.anim_timer.start(16)

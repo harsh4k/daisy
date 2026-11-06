@@ -11,13 +11,13 @@ class MediaVisualRegressionTests(unittest.TestCase):
     def test_seek_rail_has_an_accessible_hit_area(self):
         w = self.window({'motion_mode': 'reduced'})
         w.change_state('Hover')
-        self.assertGreaterEqual(w.music_page.progress.height(), 32)
+        self.assertGreaterEqual(w.dashboard.progress.height(), 32)
 
     def test_empty_seek_rail_does_not_fill_its_interaction_rectangle(self):
         w = self.window({'motion_mode': 'reduced'})
         w.change_state('Hover')
         test_hover.APP.processEvents()
-        image = w.music_page.progress.grab().toImage()
+        image = w.dashboard.progress.grab().toImage()
         scale = image.devicePixelRatio()
         pixel = image.pixelColor(round(image.width() / 2), round(2 * scale))
         background = QColor(w.theme['background'])

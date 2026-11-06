@@ -19,8 +19,6 @@ import subprocess
 
 from app_styles import get_stylesheet
 from dashboard_panel import DashboardPanel
-from music_page import MusicPage
-from tab_bar import TabBar, HEIGHT as TAB_BLOCK
 from media_widgets import ElidedLabel
 from idle_behavior import IdleBehavior
 from shell_motion import ShellMotion
@@ -55,9 +53,6 @@ from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
                              QComboBox, QScrollArea, QMessageBox, QToolButton, QFileDialog)
 
                
-# The open island: Home's three cards plus the header and the tab bar.
-OPEN_H = 284
-PAGE_H = OPEN_H - BAR_HEIGHT - TAB_BLOCK
 DWMWA_SYSTEMBACKDROP_TYPE = 38
 DWMWA_WINDOW_CORNER_PREFERENCE = 33
 DWMSBT_DISABLE = 1
@@ -152,11 +147,10 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         self.MUSIC_W, self.MUSIC_H = 420, 40
         # A notification swells the pill into a sender chip; the porcelain card hangs below.
         self.NOTIFY_W, self.NOTIFY_H = 204, 40
-        # Every page fills the viewport between the header and the tab bar.
-        self.WEATHER_W, self.WEATHER_H = 576, PAGE_H
-        self.CALENDAR_W, self.CALENDAR_H = 576, PAGE_H
-        self.MONTH_W, self.MONTH_H = 576, PAGE_H
-        self.EDIT_W, self.EDIT_H = 576, PAGE_H
+        self.WEATHER_W, self.WEATHER_H = 576, 208
+        self.CALENDAR_W, self.CALENDAR_H = 576, 208
+        self.MONTH_W, self.MONTH_H = 576, 208
+        self.EDIT_W, self.EDIT_H = 576, 208
         self.WIDE_W = 1200                                             
         
         self.is_charging = False
@@ -164,7 +158,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         self.current_state = "Idle"
         self.media_state = "Idle"
         self.media_title, self.media_artist = "", ""
-        self.features = ["dashboard", "music", "weather", "calendar", "month", "tools"]
+        self.features = ["dashboard", "weather", "calendar", "month", "tools"]
         self.current_feature_index = 0
         self.showing_lyrics = False
         self.media_lyric_text = ""
@@ -418,7 +412,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         # Each page brings its own light: album colour, sky, night, amber.
         stage_wash.paint(self, painter, rect)
 
-        can_anim = (self.decorative_motion and self.animation_style != "None" and self.features[self.current_feature_index] in ("dashboard", "music")
+        can_anim = (self.decorative_motion and self.animation_style != "None" and self.features[self.current_feature_index] == "dashboard"
                     and (self.current_state == "Hover" or
                          (self.current_state == "Idle" and self.media_state in ("Playing", "Paused"))))
         
@@ -527,7 +521,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         try:
             key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\DWM")
             v, _ = winreg.QueryValueEx(key, "ColorizationColor"); winreg.CloseKey(key); return f"#{(v & 0xFFFFFF):06x}"
-        except Exception: return "#0078D7"
+        except: return "#0078D7"
 
     def get_shine_phase(self): return self._shine_phase
     def set_shine_phase(self, value): self._shine_phase = value; self.update()
@@ -615,24 +609,19 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         self.month_panel = self.create_month_panel()
         self.dashboard = DashboardPanel()
         self.dashboard.action_requested.connect(self.request_action)
+        self.dashboard.seek_requested.connect(lambda seconds: getattr(self.media_monitor, 'seek_to', lambda _: None)(seconds))
+        self.dashboard.preferred_source_requested.connect(self.choose_media_source)
+        self.dashboard.set_preferred_source(self.settings['preferred_media_source'])
         self.dashboard.set_theme(self.theme)
-        self.music_page = MusicPage()
-        self.music_page.action_requested.connect(self.request_action)
-        self.music_page.seek_requested.connect(lambda seconds: getattr(self.media_monitor, 'seek_to', lambda _: None)(seconds))
-        self.music_page.preferred_source_requested.connect(self.choose_media_source)
-        self.music_page.set_preferred_source(self.settings['preferred_media_source'])
-        self.music_page.set_theme(self.theme)
         self.create_tools_panel()
-        # Stage: a header (battery, date and time, menu) above the page and a tab bar below it.
+        # Stage: no dock. A top bar says where you are; the glances on Now open pages.
         self.stage_bar = StageBar()
         self.stage_bar.set_theme(self.theme)
+        self.stage_bar.home_requested.connect(lambda: self.select_feature('dashboard'))
         self.navigation = self.stage_bar
-        self.tab_bar = TabBar()
-        self.tab_bar.set_theme(self.theme)
-        self.tab_bar.selected.connect(self.select_feature)
         self.power_buttons = []
         button = QToolButton(objectName='PowerButton')
-        button.setIcon(qta.icon('ph.dots-three-bold', color=self.theme['muted'], color_active=self.theme['text']))
+        button.setIcon(qta.icon('ph.power', color=self.theme['muted'], color_active=self.theme['text']))
         button.setAccessibleName('Power options')
         button.setToolTip('Power options')
         button.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -643,13 +632,13 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         button.setMenu(power_menu)
         self.stage_bar.add_power(button)
         self.power_buttons.append(button)
-        # Every page's entry point: the tabs, in the order they read.
-        self.nav_buttons = self.tab_bar.ordered()
+        # Every page's entry point, in feature order: the crumb, then each glance.
+        glances = self.dashboard.glances
+        self.nav_buttons = [self.stage_bar.crumb, glances['weather'], glances['calendar'],
+                            glances['month'], glances['tools']]
         self.dashboard.glance_requested.connect(self.select_feature)
         self.navigation.hide()
-        self.tab_bar.hide()
         self.dashboard.hide()
-        self.music_page.hide()
         
         for p in [self.perf_panel, self.weather_panel, self.calendar_panel, self.month_panel]: p.hide()
         
@@ -691,7 +680,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         pages = QVBoxLayout(self.feature_pages)
         pages.setContentsMargins(0, 0, 0, 0)
         pages.setSpacing(0)
-        for panel in (self.dashboard, self.music_page, self.weather_panel, self.calendar_panel,
+        for panel in (self.dashboard, self.weather_panel, self.calendar_panel,
                       self.month_panel, self.tools_panel):
             pages.addWidget(panel, 0, Qt.AlignmentFlag.AlignHCenter)
         pages.addStretch()
@@ -701,7 +690,6 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         self.feature_scroll.hide()
         self.content_layout.addWidget(self.navigation)
         self.content_layout.addWidget(self.feature_scroll, 0, Qt.AlignmentFlag.AlignHCenter)
-        self.content_layout.addWidget(self.tab_bar, 0, Qt.AlignmentFlag.AlignHCenter)
         
         self.content_layout.addStretch(); self.update_content()
         # Removed hardcoded move(15, 0) which was causing right-side clipping
@@ -712,11 +700,11 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         self.media_monitor = MediaMonitor(self); self.media_monitor.media_updated.connect(self.update_media)
         self.media_monitor.lyrics_updated.connect(self.update_lyrics)
         for signal, handler in [('artwork_updated', self.update_artwork),
-                                ('timeline_updated', lambda pos, duration: self.music_page.update_timeline(pos, duration)),
-                                ('source_updated', lambda source: self.music_page.update_source(source)),
-                                ('capabilities_updated', lambda caps: self.music_page.set_capabilities(caps)),
+                                ('timeline_updated', lambda pos, duration: self.dashboard.update_timeline(pos, duration)),
+                                ('source_updated', lambda source: self.dashboard.update_source(source)),
+                                ('capabilities_updated', lambda caps: self.dashboard.set_capabilities(caps)),
                                 ('sources_updated', self.update_media_sources),
-                                ('transport_result', lambda action, success: self.music_page.show_transport_result(action, success))]:
+                                ('transport_result', lambda action, success: self.dashboard.show_transport_result(action, success))]:
             if hasattr(self.media_monitor, signal):
                 getattr(self.media_monitor, signal).connect(handler)
         if hasattr(self.media_monitor, 'set_preferred_source'):
@@ -1174,7 +1162,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
             style_legacy_panels(self)
         self.tasks_scroll.verticalScrollBar().setValue(0)
         # Every expanded card is the same size; the list scrolls instead of growing.
-        self.CALENDAR_H = PAGE_H
+        self.CALENDAR_H = 208
         
         if not self.is_editing_tasks:
             self.calendar_panel_widget.setFixedSize(self.CALENDAR_W, self.CALENDAR_H)
@@ -1268,10 +1256,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         self.update_island_region()
 
     def refresh_stage_status(self):
-        now = datetime.datetime.now()
-        self.stage_bar.set_status(self.battery_state, now.strftime('%I:%M %p').lstrip('0'),
-                                  f"{now.strftime('%a')} {now.day} {now.strftime('%b %Y')}")
-        self.stage_bar.eyes.set_ambient_tint(self.ambient_tint())
+        self.stage_bar.set_status(self.battery_state, datetime.datetime.now().strftime('%I:%M %p').lstrip('0'))
 
     def next_task(self, now=None):
         """The first of today's tasks still ahead, by its listed time."""
@@ -1289,27 +1274,23 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
     def refresh_glances(self):
         """Fill the Now page's glances from the timer, tasks, date and weather."""
         panel, dash = self.tools_panel, self.dashboard
-        state = getattr(panel.timer, 'state', '')
-        clock = panel.time_text.text()
-        if state == 'running':
-            detail = f'{self.minutes_left(clock, panel.minutes.value())} min left'
-        elif state == 'paused':
-            detail = 'paused'
+        state = {'running': 'Running', 'paused': 'Paused'}.get(getattr(panel.timer, 'state', ''), 'Ready')
+        dash.set_glance('tools', 'Focus', f'{state} · {panel.minutes.value()} min',
+                        panel.time_text.text(), tint=self.theme['timer_accent'])
+        task = self.next_task()
+        if task:
+            dash.set_glance('calendar', task['name'], f"Today · {task['time']}", chevron=True)
         else:
-            detail = f'Ready · {panel.minutes.value()} min'
-        dash.set_focus(clock, detail, state == 'running')
-        dash.set_next_task(self.next_task(), len(self.settings.get('tasks', [])))
-
-    @staticmethod
-    def minutes_left(clock, fallback):
-        """Whole minutes still to run on a "mm:ss" or "h:mm:ss" countdown, rounded up."""
-        try:
-            seconds = 0
-            for part in clock.split(':'):
-                seconds = seconds * 60 + int(part)
-        except ValueError:
-            return fallback
-        return max(1, -(-seconds // 60))
+            count = len(self.settings.get('tasks', []))
+            dash.set_glance('calendar', 'No more tasks today', f'{count} on your list', chevron=True)
+        now = datetime.datetime.now()
+        dash.set_glance('month', f"{now.strftime('%A')} {now.day}", now.strftime('%B %Y'), chevron=True)
+        weather = getattr(self, '_weather', None)
+        if weather:
+            dash.set_glance('weather', weather['city'], weather['desc'], weather['temp'], tint=self.theme['wash_sun'])
+        else:
+            dash.set_glance('weather', self.settings.get('location', 'Weather'), 'Loading weather…',
+                            tint=self.theme['wash_sun'])
 
     def ambient_tint(self):
         """The orb and bars glow in the album's colour while music plays, else the accent."""
@@ -1341,7 +1322,6 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
 
     def update_artwork(self, data):
         self.dashboard.update_artwork(data)
-        self.music_page.update_artwork(data)
         self._render_album_art_thumb(data)
 
     def _render_album_art_thumb(self, data):
@@ -1371,7 +1351,6 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
 
     def update_media(self, state, title, artist, accent_hex):
         self.dashboard.update_media(state, title, artist, accent_hex)
-        self.music_page.update_media(state, title, artist, accent_hex)
         self.media_state, self.media_title, self.media_artist = state, title, artist; self.album_accent_color = QColor(accent_hex)
         if state == "Idle":
             self.showing_lyrics = False
@@ -1400,7 +1379,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
     def _fit_feature_content(self):
         if self.current_state != 'Hover':
             return
-        panel = {'dashboard': self.dashboard, 'music': self.music_page, 'weather': self.weather_panel,
+        panel = {'dashboard': self.dashboard, 'weather': self.weather_panel,
                  'calendar': self.calendar_panel, 'month': self.month_panel,
                  'tools': self.tools_panel}[self.features[self.current_feature_index]]
         self.feature_pages.setMinimumHeight(panel.height())
@@ -1419,11 +1398,8 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         self.notify_chip.setVisible(self.current_state == 'Notify')
         self.status_icon.set_active(self.current_state == 'Idle' and not self.game_suspended)
         self.navigation.setVisible(hover)
-        self.tab_bar.setVisible(hover)
-        self.stage_bar.set_active(hover and not self.game_suspended)
         self.feature_scroll.setVisible(hover)
         self.dashboard.setVisible(hover and feature == 'dashboard')
-        self.music_page.setVisible(hover and feature == 'music')
         self.perf_panel.hide()
         self.perf_widget.hide()
         self.media_controls.hide()
@@ -1432,7 +1408,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         self.month_panel.setVisible(hover and feature == 'month')
         self.tools_panel.setVisible(hover and feature == 'tools')
         self._fit_feature_content()
-        self.tab_bar.set_current(feature)
+        self.stage_bar.set_page(feature == 'dashboard')
         stage_wash.set_page(self, feature if hover else None)
         if hover and feature == 'month':
             self.calendar_page.refresh(self.agenda())
@@ -1572,19 +1548,18 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         elif self.current_state == 'Notify':
             w, h = self.NOTIFY_W, self.NOTIFY_H
         else:
-            w, h = 624, OPEN_H
+            w, h = 624, 272
         available = self.screen().availableGeometry()
         w = min(w, available.width())
         h = min(h, available.height() - (0 if self.island_style == 'Notch Nook' else 10))
         if self.current_state == 'Hover':
-            viewport_width, viewport_height = max(1, w - outer * 2), max(1, h - BAR_HEIGHT - TAB_BLOCK)
+            viewport_width, viewport_height = max(1, w - outer * 2), max(1, h - BAR_HEIGHT - outer)
             self.feature_scroll.setFixedSize(viewport_width, viewport_height)
-            selected = {'dashboard': self.dashboard, 'music': self.music_page, 'weather': self.weather_panel,
+            selected = {'dashboard': self.dashboard, 'weather': self.weather_panel,
                         'calendar': self.calendar_panel, 'month': self.month_panel,
                         'tools': self.tools_panel}[feature]
             page_width = viewport_width
             self.dashboard.set_available_width(page_width)
-            self.music_page.set_available_width(page_width)
             self.weather_panel.setFixedSize(page_width, viewport_height)
             self.month_panel.setFixedSize(page_width, viewport_height)
             self.tools_panel.setFixedSize(page_width, viewport_height)
@@ -1815,11 +1790,9 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         self.accent_color = self.theme['accent']
         self.setStyleSheet(get_stylesheet(theme=self.theme))
         self.dashboard.set_theme(self.theme)
-        self.music_page.set_theme(self.theme)
         self.tools_panel.set_theme(self.theme)
         self.stage_bar.set_theme(self.theme)
-        self.tab_bar.set_theme(self.theme)
-        self.power_buttons[0].setIcon(qta.icon('ph.dots-three-bold', color=self.theme['muted'], color_active=self.theme['text']))
+        self.power_buttons[0].setIcon(qta.icon('ph.power', color=self.theme['muted'], color_active=self.theme['text']))
         self.apply_visual_preferences()
         self.save_settings()
         self.update_content()
