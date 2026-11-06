@@ -114,5 +114,32 @@ class HoverOpenMotionTests(unittest.TestCase):
             self.assertEqual((w.island_w, w.island_h), (w.IDLE_W, w.IDLE_H))
 
 
+    def test_notification_waits_while_the_island_is_open_then_shows(self):
+        w = self.window()
+        self.go(w, 'Hover')
+        self.assertTrue(settle.settle_shell(w))
+        w._pointer_over = True  # the pointer is on the island
+        w.show_notification('Discord', 'Alex', 'hello')
+        w.show_key_event('Caps Lock', True)
+        self.assertEqual(w.current_state, 'Hover', 'the open island is not collapsed by an alert')
+        self.assertEqual(w._pending_notification, ('Discord', 'Alex', 'hello'))
+        w._pointer_over = False
+        self.go(w, 'Idle')
+        QTest.qWait(900)
+        self.assertEqual(w.current_state, 'Notify')
+        self.assertEqual(w.event_title, 'Discord')
+
+    def test_overlay_resizes_and_moves_in_one_step(self):
+        import overlay_fit
+        w = self.window()
+        w.move = lambda *a, **k: self.fail('a separate move shows the island shifted for a frame')
+        overlay_fit.fit(w, 700, 340)
+        self.assertEqual((w.width(), w.height()), (700, 340))
+        self.assertEqual(w.x(), w.get_centered_x(700))
+        overlay_fit.fit(w, 400, 120)
+        self.assertEqual((w.width(), w.height()), (400, 120))
+        self.assertEqual(w.x(), w.get_centered_x(400))
+
+
 if __name__ == '__main__':
     unittest.main()

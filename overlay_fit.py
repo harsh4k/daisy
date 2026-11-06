@@ -5,7 +5,9 @@ its size is the real cost of each frame. At rest the overlay hugs the island;
 it grows before a transition starts, never during one, and shrinks once the
 motion settles. The island stays centred, so resizing never moves it.
 """
-from PyQt6.QtCore import QPoint
+from PyQt6.QtCore import QPoint, QRect, QSize
+
+WIDGET_MAX = 16777215  # QWIDGETSIZE_MAX
 
 MARGIN_X = 48       # rim aura, notch ears and a soft glow either side
 MARGIN_BOTTOM = 56  # glow under the island
@@ -37,11 +39,15 @@ def fit(window, width, height):
     """Resize and centre the overlay on the screen's top edge, if anything changed."""
     cap_w, cap_h = caps(window)
     width, height = min(width, cap_w), min(height, cap_h)
-    if (window.width(), window.height()) != (width, height):
-        window.setFixedSize(width, height)
-    target = QPoint(window.get_centered_x(width), window.screen().availableGeometry().y())
-    if window.pos() != target:
-        window.move(target)
+    target = QRect(QPoint(window.get_centered_x(width), window.screen().availableGeometry().y()), QSize(width, height))
+    if window.geometry() == target:
+        return
+    # Resizing and then moving were two native calls. Between them the island, centred in a
+    # window that had grown or shrunk to one side, sat shifted by half the size change.
+    window.setMinimumSize(0, 0)
+    window.setMaximumSize(WIDGET_MAX, WIDGET_MAX)
+    window.setGeometry(target)
+    window.setFixedSize(width, height)
 
 
 def grow_for(window, start, end, springy):

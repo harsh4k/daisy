@@ -34,7 +34,7 @@ from stage_bar import StageBar, HEIGHT as BAR_HEIGHT
 from stage_pages import WeatherPage, CalendarPage
 import stage_wash
 from theme_tokens import THEMES, get_theme
-from ui_tokens import SPACING, RADIUS, font, font_css, tag_role
+from ui_tokens import SPACING, RADIUS, MOTION, font, font_css, tag_role
 from power_menu import build_power_menu, refresh_power_menu
 from branding import APP_NAME, app_icon, notification_icon
 from app_runtime import configure_application, acquire_instance_lock, set_autostart
@@ -297,7 +297,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
     def flush_pending_notification(self):
         if self._pending_notification and not self.is_dialog_open and not self.is_editing_tasks:
             pending, self._pending_notification = self._pending_notification, None
-            self.show_notification(*pending)
+            self.show_notification(*pending, force=True)
 
     def on_location_updated(self, success, message):
         if success:
@@ -538,8 +538,9 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
 
     def get_windows_accent_color(self):
         try:
-            key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\DWM")
-            v, _ = winreg.QueryValueEx(key, "ColorizationColor"); winreg.CloseKey(key); return f"#{(v & 0xFFFFFF):06x}"
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\DWM") as key:
+                v, _ = winreg.QueryValueEx(key, "ColorizationColor")
+            return f"#{(v & 0xFFFFFF):06x}"
         except: return "#0078D7"
 
     def get_shine_phase(self): return self._shine_phase
@@ -921,6 +922,8 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         if self.is_dialog_open or self.is_editing_tasks:
             self._pending_notification = (name, "", "On" if is_on else "Off")
             return
+        if self.island_in_use():
+            return  # A lock light is not worth collapsing the island the user is using.
         self.event_title = name; self.event_text = ("On" if is_on else "Off")
         self.notification_title, self.notification_message = '', self.event_text
         self.notification_kind = 'key'  # a status change lives in the pill, without a card
@@ -939,10 +942,17 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
             return
         self.notification_inbox.add(record)
 
-    def show_notification(self, app, title, text):
+    def island_in_use(self):
+        """The island is open and the pointer is on it, or it is still opening or closing."""
+        return self.current_state == 'Hover' and (
+            getattr(self, '_pointer_over', False) or self.anim_group.state() == self.anim_group.State.Running)
+
+    def show_notification(self, app, title, text, force=False):
         if self.game_suspended or self.browser_mode:
             return
-        if self.is_dialog_open or self.is_editing_tasks:
+        if self.is_dialog_open or self.is_editing_tasks or (self.island_in_use() and not force):
+            # An island under the pointer used to collapse into a chip and a card, then fall
+            # back to the pill. The notification waits and shows once the island closes.
             self._pending_notification = (app, title, text)
             return
         self.event_title = app; self.event_text = (f"{title}: {text}" if title else text)
@@ -1602,10 +1612,12 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         if new == 'Idle' and (self.is_editing_tasks or
                               (self.current_state not in ('Hidden', 'Notify') and self.has_keyboard_focus())):
             return
-        self.current_state = new
+        previous, self.current_state = self.current_state, new
         if new != 'Hidden':
             self.idle_behavior.note_interaction()
         self.execute_liquid_transition()
+        if previous == 'Hover' and new == 'Idle' and self._pending_notification:
+            QTimer.singleShot(MOTION['close'] + 300, self.flush_pending_notification)
 
     def set_autohide_delay(self, seconds):
         self.idle_behavior.set_timeout(seconds)
@@ -1761,6 +1773,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
             resting = card.rest_rect().toAlignedRect()
             over_card = QRect(self.mapToGlobal(resting.topLeft()), resting.size()).contains(cursor_pos)
         over_island = hit_rect.contains(cursor_pos) or over_card
+        self._pointer_over = over_island
         # Poll fast only near the island; far away the pointer cannot reach it within a tick.
         near = hit_rect.adjusted(-200, -200, 200, 200).contains(cursor_pos)
         interval = 25 if near or self.current_state != 'Idle' else 80

@@ -76,16 +76,19 @@ class NotificationMonitor(QThread):
                                                                                  
                                                  
         
-        known_ids = set()
-                        
-        initial = await asyncio.wait_for(self.listener.get_notifications_async(0x1), 5)
-        for n in initial:
-            known_ids.add(n.id)
+        # The first successful read is the baseline: what is already on screen is not "new".
+        # It used to be a bare call before the loop, so one timeout at sign-in ended the
+        # listener for good and no Windows notification was ever shown again.
+        known_ids = None
 
         while self._is_running:
             try:
                 notifications = await asyncio.wait_for(self.listener.get_notifications_async(0x1), 5)
                 current_ids = {n.id for n in notifications}
+                if known_ids is None:
+                    known_ids = current_ids
+                    await asyncio.sleep(1.0)
+                    continue
                 for n in notifications:
                     if n.id not in known_ids:
                         known_ids.add(n.id)
