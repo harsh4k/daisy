@@ -3,6 +3,11 @@ if __name__ == '__main__' and len(sys.argv) == 3 and sys.argv[1] == '--daisy-fat
     from runtime_fatal import run_sink_command
     raise SystemExit(run_sink_command(sys.argv))
 
+if __name__ == '__main__' and len(sys.argv) == 3 and sys.argv[1] == '--daisy-hook':
+    # A Claude Code / Codex hook: run it and leave, without building the island.
+    from hook_cli import run_hook
+    raise SystemExit(run_hook(sys.argv[2]))
+
 import psutil
 import winreg
 import ctypes
@@ -687,6 +692,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         self.notification_banner = NotificationBanner(self)
         self.notification_banner.dismissed.connect(self.dismiss_notification)
         self.notification_banner.review_requested.connect(self.open_approvals)
+        self.notification_banner.approval_answered.connect(self.answer_approval)
         self.notification_kind = 'card'
         self.notification_card = CardMotion(self, self.notification_banner)
         # A stable viewport keeps navigation in place while tall pages scroll.
@@ -958,6 +964,8 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         self.event_title = app; self.event_text = (f"{title}: {text}" if title else text)
         self.notification_title, self.notification_message = title, text
         self.notification_kind = 'card'
+        if not force:
+            self.daisy_eyes.react('curious', 1.4)   # a quick look at what arrived
         if self.current_state == "Notify": self.update_feature_view(); self.execute_liquid_transition()
         else: self.change_state("Notify")
         self.revert_timer.start(3500)
@@ -1263,6 +1271,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         if self.current_state == "Idle":
             now = datetime.datetime.now()
             ts = now.strftime("%I:%M %p").lstrip("0")
+            self.daisy_eyes.set_hour(now.hour)   # night makes the eyes sleepy
             timer_text = self.tools_panel.compact_text() if hasattr(self, 'tools_panel') else ''
             # macOS menu-bar format: "Tue 2:07 PM".
             self.status_text.setText(f"{now.strftime('%a')} {ts}" + (f' · {timer_text}' if timer_text else ''))
@@ -1456,6 +1465,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
             message = getattr(self, 'notification_message', self.event_text)
             self.notification_banner.set_message(self.event_title,
                 getattr(self, 'notification_title', ''), message)
+            self.notification_banner.set_approval(self.pending_approval_for(self.event_title))
             self.notification_banner.set_review_available(self.has_pending_approval(self.event_title))
             key = self.notification_kind == 'key'
             self.chip_text.setText(f'{self.event_title} · {message}' if key else str(self.event_title or 'Notification'))
@@ -1889,6 +1899,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
             compatibility.setChecked(self.compatibility_mode)
             compatibility.triggered.connect(self.toggle_compatibility_mode)
             menu.addAction("Change Location").triggered.connect(self.change_location_dialog)
+            menu.addAction("Connect Claude Code…").triggered.connect(self.connect_claude_code)
             menu.addSeparator()
             menu.addAction("Quit Daisy").triggered.connect(self.close)
             menu.exec(self.mapToGlobal(event.pos()))

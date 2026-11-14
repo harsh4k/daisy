@@ -7,6 +7,7 @@ from app_runtime import configure_application, acquire_instance_lock, launch_res
 from runtime_diagnostics import configure_diagnostics, shutdown_diagnostics, enable_fatal_capture
 from runtime_tray import RuntimeTray
 from approval_bridge import ApprovalBridge
+from daisy_events import EventBridge
 
 
 def run(island_type):
@@ -33,6 +34,10 @@ def run(island_type):
             approvals = ApprovalBridge(parent=island)
             approvals.start()
             island.attach_approval_bridge(approvals)
+        if hasattr(island, 'attach_event_bridge'):
+            events = EventBridge(parent=island)
+            events.start()
+            island.attach_event_bridge(events)
         if hasattr(island, 'start_monitors'):
             island.start_monitors()
         island.runtime_tray = RuntimeTray(island, island.open_settings,

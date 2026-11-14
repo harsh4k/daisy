@@ -46,7 +46,10 @@ def server_is_trusted(descriptor):
         path = ctypes.create_unicode_buffer(length.value)
         if not kernel.QueryFullProcessImageNameW(handle, 0, path, ctypes.byref(length)):
             return False
-        expected = Path(__file__).resolve().parent / 'dist' / 'Daisy.exe'
+        # A frozen hook is Daisy.exe itself, so the pipe's server must be that same binary;
+        # from source only the repo's built dist\Daisy.exe qualifies.
+        expected = (Path(sys.executable) if getattr(sys, 'frozen', False)
+                    else Path(__file__).resolve().parent / 'dist' / 'Daisy.exe')
         return os.path.normcase(os.path.realpath(path.value)) == os.path.normcase(os.path.realpath(expected))
     finally:
         kernel.CloseHandle(handle)

@@ -10,11 +10,20 @@ import settle
 class BridgeFixture(QObject):
     changed = pyqtSignal()
     request_received = pyqtSignal(object)
+    decided = pyqtSignal(str, str)
     error = ''
 
     def __init__(self):
         super().__init__()
         self.records = []
+        self.answers = []
+
+    def resolve(self, request_id, decision):
+        self.answers.append((request_id, decision))
+        self.records = [r for r in self.records if r['id'] != request_id]
+        self.changed.emit()
+        self.decided.emit(request_id, decision)
+        return True
 
     def pending(self):
         return self.records
@@ -39,8 +48,10 @@ class ApprovalIntegrationTests(unittest.TestCase):
         bridge.request_received.emit(record)
         self.assertEqual(window.current_state, 'Notify')
         self.assertTrue(settle.settle_shell(window))
-        self.assertTrue(window.notification_banner.review.isVisible())
-        window.notification_banner.review.click()
+        # The card now carries Allow and Deny; Details is how you inspect the full request first.
+        self.assertTrue(window.notification_banner.allow.isVisible())
+        self.assertTrue(window.notification_banner.details.isVisible())
+        window.notification_banner.details.click()
         self.assertTrue(settle.settle_shell(window))
         self.assertEqual(window.features[window.current_feature_index], 'tools')
         self.assertIs(window.tools_panel.tabs.currentWidget(), window.approvals_panel)

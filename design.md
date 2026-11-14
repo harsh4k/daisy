@@ -108,6 +108,27 @@ This banner is not a notification history or an AI permission approval bridge.
 Keep Settings vertically scrollable at constrained sizes without horizontal
 clipping. Preserve keyboard navigation, task editing and active dialogs.
 
+## Eyes and agents
+
+The pill's two eyes are Daisy's face (`daisy_eyes.py`, moods in `emotions.py`). The
+clock sets the baseline: sleepy from 22:00 to 06:00 (sagging lids, slow heavy blinks,
+drifting z). Reactions sit on top and ease in and out: curious (a notification),
+alert (a permission request, held until it ends), happy (an answer of Allow, or the
+focus timer finishing), proud (an agent finished: happy arcs and a twinkling star),
+sad (an answer of Deny). The most urgent reaction wins. Reduced motion shows the
+mood without bobbing, drifting or blinking. Eyes only animate while visible.
+
+A permission request is a card with Allow and Deny. The buttons wake 700 ms after
+the card appears, answer only the request shown, and can be pressed once; Details
+opens the full request in Tools -> Approvals. It reaches you even while the island is
+open, because it expires in two minutes. A check or cross pops in when the answer
+has gone out. Nothing is ever allowed by Daisy on its own.
+
+Right-click -> Connect Claude Code adds two hooks to `~/.claude/settings.json` (with a
+backup, after a yes): PermissionRequest and Stop, both running `Daisy.exe --daisy-hook`.
+The hook only talks to a Daisy it can verify is the same binary. Stop sends one
+bounded line (finished, provider, folder name) over a user-only pipe.
+
 ## Motion
 
 The shell stays anchored at top center; text and artwork never scale. Animate

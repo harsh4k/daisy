@@ -22,32 +22,49 @@ def hook_entry(provider, root):
     return entry
 
 
-def merge_hooks(original, entry):
+def frozen_entries(exe):
+    """Hooks that run the installed Daisy.exe itself: approvals, and "Claude finished"."""
+    exe = Path(exe).resolve()
+    command = lambda kind: f'"{exe}" --daisy-hook {kind}'
+    return [('PermissionRequest', '*', {'type': 'command', 'command': command('claude-permission'), 'timeout': 130}),
+            ('Stop', None, {'type': 'command', 'command': command('claude-done'), 'timeout': 10})]
+
+
+def merge_hooks(original, entry, event='PermissionRequest', matcher='*'):
     if not isinstance(original, dict):
         raise ValueError('Hook configuration must be an object')
     result = copy.deepcopy(original)
     hooks = result.setdefault('hooks', {})
     if not isinstance(hooks, dict):
         raise ValueError('Invalid hook configuration')
-    groups = hooks.setdefault('PermissionRequest', [])
+    groups = hooks.setdefault(event, [])
     if not isinstance(groups, list) or any(not isinstance(group, dict) for group in groups):
-        raise ValueError('Invalid PermissionRequest configuration')
+        raise ValueError('Invalid %s configuration' % event)
     if any(not isinstance(group.get('hooks'), list) or
            any(not isinstance(handler, dict) for handler in group['hooks']) for group in groups):
-        raise ValueError('Invalid PermissionRequest handlers')
+        raise ValueError('Invalid %s handlers' % event)
     if any(entry == handler for group in groups for handler in group.get('hooks', [])):
         return result
-    groups.append({'matcher': '*', 'hooks': [copy.deepcopy(entry)]})
+    group = {'hooks': [copy.deepcopy(entry)]}
+    if matcher is not None:
+        group = {'matcher': matcher, **group}
+    groups.append(group)
     return result
 
 
-def install_hook(target, entry):
+def install_hook(target, entry, event='PermissionRequest', matcher='*'):
+    return install_hooks(target, [(event, matcher, entry)])
+
+
+def install_hooks(target, specs):
     """Back up exact bytes, then replace atomically only if the source is unchanged."""
     target = Path(target)
     existed = target.exists()
     original = target.read_bytes() if existed else b'{}'
     try:
-        updated = merge_hooks(json.loads(original.decode('utf-8-sig')), entry)
+        updated = json.loads(original.decode('utf-8-sig'))
+        for event, matcher, entry in specs:
+            updated = merge_hooks(updated, entry, event, matcher)
     except (UnicodeError, TypeError, json.JSONDecodeError) as error:
         raise ValueError('Invalid hook configuration; original preserved') from error
     if updated == json.loads(original.decode('utf-8-sig')):

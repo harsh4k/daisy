@@ -1,10 +1,11 @@
 """Upgrade integration kept separate from the legacy native shell painter."""
 import logging
+import sys
 from pathlib import Path
 
 from PyQt6.QtCore import QUrl, QTimer
 from PyQt6.QtGui import QDesktopServices
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from app_rules import ForegroundPolicy, RuleGuard
 from app_runtime import get_startup_status
@@ -17,6 +18,8 @@ from theme_tokens import get_theme
 from tools_panel import ToolsPanel
 from notification_inbox import NotificationInbox
 from approvals_panel import ApprovalsPanel
+from approval_setup import frozen_entries, install_hooks
+from notification_banner import summarize
 from system_card import SystemCard
 
 
@@ -55,14 +58,74 @@ class OverlayUpgradeMixin:
         self.approvals_panel.attach_bridge(bridge)
         bridge.changed.connect(self.refresh_approvals)
         bridge.request_received.connect(self.on_approval_requested)
+        bridge.decided.connect(self.on_approval_decided)
         self.refresh_approvals()
 
+    def connect_claude_code(self):
+        """Right-click → Connect Claude Code: register Daisy's two hooks, with a backup, after a yes."""
+        exe = (Path(sys.executable) if getattr(sys, 'frozen', False)
+               else Path(__file__).resolve().parent / 'dist' / 'Daisy.exe')
+        if not exe.is_file():
+            QMessageBox.information(self, 'Daisy', 'Install Daisy first: the hooks run the installed Daisy.exe.')
+            return
+        target = Path.home() / '.claude' / 'settings.json'
+        self.is_dialog_open = True
+        try:
+            ask = QMessageBox.question(
+                self, 'Connect Claude Code',
+                'Daisy will add two hooks to Claude Code:\n\n'
+                '- Permission requests: appear on the island with Allow and Deny.\n'
+                '- Stop: the eyes look proud when Claude finishes.\n\n'
+                f'File: {target}\nA backup is saved beside it. Daisy never allows anything by itself.')
+            if ask != QMessageBox.StandardButton.Yes:
+                return
+            try:
+                backup = install_hooks(target, frozen_entries(exe))
+            except (OSError, ValueError) as error:
+                QMessageBox.warning(self, 'Daisy', f'Could not connect Claude Code: {error}')
+                return
+            QMessageBox.information(self, 'Daisy', 'Claude Code is connected. Start a new Claude session to use it.'
+                                    + (f'\nBackup: {backup}' if backup else '\nIt was already connected.'))
+        finally:
+            self.is_dialog_open = False
+
+    def attach_event_bridge(self, bridge):
+        self.event_bridge = bridge
+        bridge.event_received.connect(self.on_agent_event)
+
+    def on_agent_event(self, event):
+        """An agent finished its work: the eyes are proud, and a hidden pill comes out to show it."""
+        if event.get('event') != 'done' or self.game_suspended:
+            return
+        self.daisy_eyes.react('proud', 4.5)
+        if self.current_state == 'Hidden':
+            self.change_state('Idle')
+        self.idle_behavior.note_interaction()
+
+    def pending_approval_for(self, sender):
+        provider = {'Codex': 'codex', 'Claude': 'claude'}.get(sender)
+        bridge = getattr(self, 'approval_bridge', None)
+        if bridge is None or provider is None:
+            return None
+        return next((item for item in bridge.pending() if item['provider'] == provider), None)
+
     def refresh_approvals(self):
-        count = len(self.approval_bridge.pending())
+        pending = self.approval_bridge.pending()
+        count = len(pending)
         self.tools_panel.tabs.setTabText(self.approvals_tab,
             f'Approvals ({count})' if count else 'Approvals')
-        self.notification_banner.set_review_available(self.has_pending_approval(
-            getattr(self, 'event_title', '')))
+        if not count:
+            self.daisy_eyes.release('alert')
+        sender = getattr(self, 'event_title', '')
+        if getattr(self, '_answering', False):
+            return  # the answer is on screen; let it finish before the card changes
+        self.notification_banner.set_review_available(self.has_pending_approval(sender))
+        if self.current_state == 'Notify':
+            record = self.pending_approval_for(sender)
+            self.notification_banner.set_approval(record)
+            if record is None and getattr(self, '_approval_card', False):
+                self._approval_card = False
+                self.dismiss_notification()  # the request ended (expired or answered elsewhere)
 
     def has_pending_approval(self, sender):
         bridge = getattr(self, 'approval_bridge', None)
@@ -72,7 +135,29 @@ class OverlayUpgradeMixin:
 
     def on_approval_requested(self, record):
         provider = 'Codex' if record['provider'] == 'codex' else 'Claude'
-        self.show_notification(provider, 'Permission requested', 'Review in Tools → Approvals')
+        self.daisy_eyes.react('alert')   # held wide-eyed until the request is answered or ends
+        self._approval_card = True
+        # It must reach you even when the island is open: the request expires in two minutes.
+        self.show_notification(provider, 'Permission requested', summarize(record), force=True)
+
+    def answer_approval(self, request_id, decision):
+        """Allow or Deny pressed on the card: send exactly that answer, then show it landing."""
+        self._answering = True
+        QTimer.singleShot(1600, lambda: setattr(self, '_answering', False))
+        if not self.approval_bridge.resolve(request_id, decision):
+            self._answering = False
+            self.dismiss_notification()   # it ended before the press: nothing was sent
+            return
+        self._approval_card = False
+        self.notification_banner.show_result(decision)
+        self.revert_timer.start(1400)
+
+    def on_approval_decided(self, _request_id, decision):
+        """Answered from the card or from Tools → Approvals: Daisy is pleased, or sorry."""
+        if decision == 'allow':
+            self.daisy_eyes.react('happy', 2.6)
+        else:
+            self.daisy_eyes.react('sad', 2.4)
 
     def open_approvals(self):
         # Review is navigation only. It cannot answer or broaden a permission.
@@ -113,6 +198,7 @@ class OverlayUpgradeMixin:
 
     def on_timer_completed(self):
         self.tools_panel.completion_pending = True
+        self.daisy_eyes.react('happy', 3.5)
         if (self.current_state == 'Idle' and not self.game_suspended and not self.browser_mode
                 and not self.is_dialog_open and not self.is_editing_tasks):
             self.show_notification('Focus timer', 'Complete', 'Your focus session is complete.')

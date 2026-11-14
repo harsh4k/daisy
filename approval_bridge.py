@@ -12,6 +12,7 @@ from approval_protocol import (MAX_FRAME, MAX_PENDING, REQUEST_TTL, decode_frame
 class ApprovalBridge(QObject):
     changed = pyqtSignal()
     request_received = pyqtSignal(object)
+    decided = pyqtSignal(str, str)   # request id, 'allow' or 'deny': only after the answer was sent
 
     def __init__(self, endpoint=None, parent=None, clock=time.monotonic, ttl=REQUEST_TTL):
         super().__init__(parent)
@@ -115,6 +116,7 @@ class ApprovalBridge(QObject):
         socket.disconnectFromServer()
         socket.deleteLater()
         self.changed.emit()
+        self.decided.emit(request_id, decision)
         return True
 
     def _drop(self, socket):
