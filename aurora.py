@@ -147,6 +147,7 @@ class AudioBars(QWidget):
         self.tint = QColor('#FF3B5C')
         self.reduced_motion = False
         self._start = time.monotonic()
+        self._live, self._live_at = None, 0.
         self.timer = QTimer(self)
         self.timer.setInterval(BARS_FPS_MS)
         self.timer.timeout.connect(self.update)
@@ -158,6 +159,16 @@ class AudioBars(QWidget):
         self.state = state
         self.setVisible(state in ('Playing', 'Paused'))
         self._sync()
+        self.update()
+
+    def set_levels(self, levels):
+        # Real bar heights from the spectrum (audio_spectrum.py); six are shown here.
+        if levels:
+            size = max(1, len(levels) // 6)
+            self._live = [min(1., .12 + sum(levels[i * size:(i + 1) * size]) / size) for i in range(6)]
+            self._live_at = time.monotonic()
+        else:
+            self._live = None
         self.update()
 
     def set_reduced_motion(self, reduced):
@@ -183,7 +194,8 @@ class AudioBars(QWidget):
     def paintEvent(self, _event):
         painter = QPainter(self)
         if self.state == 'Playing' and not self.reduced_motion:
-            levels = bar_levels(time.monotonic() - self._start, count=6)
+            real = self._live is not None and time.monotonic() - self._live_at < .4
+            levels = self._live if real else bar_levels(time.monotonic() - self._start, count=6)
             strength = 1.
         else:
             levels = [.35, .55, .75, .6, .45, .3]

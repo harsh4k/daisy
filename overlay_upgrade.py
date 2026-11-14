@@ -275,6 +275,28 @@ class OverlayUpgradeMixin:
             self.rearm_notification_timer()
             self.flush_pending_notification()
 
+    def sync_spectrum(self):
+        # Listen to the output only while music plays and the bars can be seen.
+        # Only a running Daisy listens: never a half-built window, and never a test.
+        wanted = (getattr(self, '_monitors_started', False)
+                  and self.media_state == 'Playing' and self.isVisible() and not self.game_suspended
+                  and not self.reduced_motion and self.current_state in ('Idle', 'Hover'))
+        monitor = getattr(self, 'spectrum_monitor', None)
+        if wanted and (monitor is None or not monitor.isRunning()):
+            if monitor is None:
+                import audio_spectrum
+                monitor = self.spectrum_monitor = audio_spectrum.SpectrumMonitor(parent=self)
+                monitor.levels_ready.connect(self.on_spectrum)
+            if not monitor.error:      # an unsupported device is not retried
+                monitor.start()
+        elif not wanted and monitor is not None and monitor.isRunning():
+            monitor.stop()
+
+    def on_spectrum(self, levels):
+        self.now_playing.set_levels(levels)
+        self.dashboard.spectrum.set_tint(self.ambient_tint())
+        self.dashboard.spectrum.set_levels(levels)
+
     def save_glitch_report(self):
         """Write the last seconds of motion beside the logs and show where it went."""
         import motion_trace

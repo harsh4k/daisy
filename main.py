@@ -1268,6 +1268,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         return self.status_text if self.status_text.isVisible() else self.daisy_eyes
 
     def update_content(self):
+        self.sync_spectrum()
         if hasattr(self, 'tools_panel'):
             self.tools_panel.tick()
         if self.current_state == "Idle":
@@ -1753,6 +1754,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
                 self.charging_anim.stop()
                 self.status_icon.set_active(False)
                 self.hide()
+                self.sync_spectrum()
             return
         if self.game_suspended:
             self.game_suspended = False
@@ -1917,6 +1919,8 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         self.status_icon.set_active(False)
         for timer in (self.power_timer, self.master_timer, self.anim_timer, self.hit_timer, self.revert_timer):
             timer.stop()
+        if getattr(self, 'spectrum_monitor', None) is not None:
+            self.spectrum_monitor.stop()
         pending = False
         for monitor in (self.perf_monitor, self.media_monitor, self.key_monitor, self.notif_monitor, self.weather_monitor):
             if monitor.stop() is False:
