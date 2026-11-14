@@ -28,6 +28,7 @@ from media_widgets import ElidedLabel
 from idle_behavior import IdleBehavior
 from shell_motion import ShellMotion
 import ignite_motion
+import motion_trace
 from content_layer import ContentLayer
 import overlay_fit
 from motion_policy import effective_reduced_motion
@@ -334,6 +335,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         self._island_w, self._island_h = width, height
         self.update_island_geometry(self.get_island_rect(), self.get_current_radius())
         self.update_island_region()
+        motion_trace.record(self, 'size')
 
     def update_island_region(self):
         """Repaint only where the island was and is, plus room for shadow and glow."""
@@ -1629,6 +1631,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
                               (self.current_state not in ('Hidden', 'Notify') and self.has_keyboard_focus())):
             return
         previous, self.current_state = self.current_state, new
+        motion_trace.record(self, 'state')
         if new != 'Hidden':
             self.idle_behavior.note_interaction()
         self.execute_liquid_transition()
@@ -1900,6 +1903,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
             compatibility.triggered.connect(self.toggle_compatibility_mode)
             menu.addAction("Change Location").triggered.connect(self.change_location_dialog)
             menu.addAction("Connect Claude Code…").triggered.connect(self.connect_claude_code)
+            menu.addAction("Save glitch report").triggered.connect(self.save_glitch_report)
             menu.addSeparator()
             menu.addAction("Quit Daisy").triggered.connect(self.close)
             menu.exec(self.mapToGlobal(event.pos()))

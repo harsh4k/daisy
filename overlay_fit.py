@@ -48,6 +48,9 @@ def fit(window, width, height):
     window.setMaximumSize(WIDGET_MAX, WIDGET_MAX)
     window.setGeometry(target)
     window.setFixedSize(width, height)
+    if hasattr(window, 'current_state'):
+        import motion_trace
+        motion_trace.record(window, 'window')
 
 
 def grow_for(window, start, end, springy):

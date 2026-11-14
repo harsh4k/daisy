@@ -44,10 +44,16 @@ def configure_fonts(app):
             font_id = QFontDatabase.addApplicationFont(str(inter))
             if font_id >= 0:
                 _font_ids.append(font_id)
+        # Windows already gives Qt its system fonts. Registering them again as application
+        # fonts copied every file into Daisy's memory (about 48 MB), so that only happens
+        # where Qt cannot see them (the offscreen platform used by tests).
+        known = set(QFontDatabase.families())
         fonts = Path(os.environ.get('WINDIR', r'C:\Windows')) / 'Fonts'
-        for name in ('SegUIVar.ttf', 'segoeui.ttf', 'seguisb.ttf', 'segoeuib.ttf', 'consola.ttf'):
+        for name, family in (('SegUIVar.ttf', 'Segoe UI Variable'), ('segoeui.ttf', 'Segoe UI'),
+                             ('seguisb.ttf', 'Segoe UI Semibold'), ('segoeuib.ttf', 'Segoe UI'),
+                             ('consola.ttf', 'Consolas')):
             path = fonts / name
-            if path.is_file():
+            if family not in known and path.is_file():
                 font_id = QFontDatabase.addApplicationFont(str(path))
                 if font_id >= 0:
                     _font_ids.append(font_id)

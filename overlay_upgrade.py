@@ -275,6 +275,20 @@ class OverlayUpgradeMixin:
             self.rearm_notification_timer()
             self.flush_pending_notification()
 
+    def save_glitch_report(self):
+        """Write the last seconds of motion beside the logs and show where it went."""
+        import motion_trace
+        directory = diagnostic_info()['log_directory']
+        if directory == 'Unavailable':
+            return None
+        try:
+            path = motion_trace.save(self, directory)
+        except OSError:
+            logging.getLogger(__name__).exception('glitch_report_failed')
+            return None
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(Path(directory))))
+        return path
+
     def open_logs(self):
         directory = diagnostic_info()['log_directory']
         if directory != 'Unavailable':

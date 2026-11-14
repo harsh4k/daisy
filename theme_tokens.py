@@ -1,11 +1,16 @@
 """Daisy's complete neutral/accent theme presets."""
 
+# Each theme is one clear, saturated accent on true black (or on its own deep tint when the
+# surface is "tinted"). The earlier set was five washed-out pastels that all read as grey.
+# (background, surface, hover, border, accent, text, muted)
 THEMES = {
-    'Dark Matter': ('#09090b', '#111113', '#202024', '#29292d', '#c1b7d4', '#f5f5f7', '#b1b1b8'),
-    'Graphite': ('#131416', '#202225', '#2c2f34', '#3d424a', '#b5c5d9', '#f2f4f7', '#b4bcc6'),
-    'Amethyst': ('#191121', '#291c36', '#39284a', '#503763', '#d1a6f4', '#faf2ff', '#c5b0d4'),
-    'Midnight': ('#0e1523', '#17243a', '#23334e', '#344969', '#9abff7', '#eff5ff', '#afc0d9'),
-    'Rose': ('#201319', '#321e28', '#472c3a', '#614051', '#efb0c8', '#fff1f6', '#d4b5c2'),
+    'Dark Matter': ('#09090b', '#111113', '#202024', '#29292d', '#8e9bff', '#f5f5f7', '#b1b1b8'),
+    'Graphite': ('#131416', '#202225', '#2c2f34', '#3d424a', '#e5e5ea', '#f2f4f7', '#b4bcc6'),
+    'Amethyst': ('#150d1f', '#22152f', '#2f1d42', '#45295f', '#bf5af2', '#f8f0ff', '#c2aed6'),
+    'Midnight': ('#07101f', '#0e1b33', '#162846', '#223a63', '#3d9bff', '#eef5ff', '#a9bcd8'),
+    'Rose': ('#1f0b12', '#32121d', '#471a2a', '#63263b', '#ff5c7c', '#fff0f4', '#dbb0bd'),
+    'Mint': ('#06170f', '#0c2519', '#123424', '#1b4a33', '#30d5a0', '#effff8', '#a6cfbc'),
+    'Sunset': ('#1c1104', '#2d1c08', '#40280c', '#5a3811', '#ff9f0a', '#fff7ea', '#d8bf97'),
 }
 
 

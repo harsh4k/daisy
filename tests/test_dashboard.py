@@ -100,7 +100,7 @@ class DashboardTests(unittest.TestCase):
     def test_every_theme_is_applied_without_media_accent_overwrite(self):
         p = self.panel()
         from theme_tokens import THEMES, get_theme
-        self.assertEqual(set(THEMES), {'Dark Matter', 'Graphite', 'Amethyst', 'Midnight', 'Rose'})
+        self.assertEqual(set(THEMES), {'Dark Matter', 'Graphite', 'Amethyst', 'Midnight', 'Rose', 'Mint', 'Sunset'})
         for name in THEMES:
             theme = get_theme(name)
             p.set_theme(theme)
