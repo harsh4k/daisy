@@ -14,7 +14,6 @@ from ui_tokens import font, font_css
 from branding import media_icon, media_identity
 from media_widgets import ElidedLabel, SeekSlider, MediaControls
 from glance import GlanceButton
-from spectrum_strip import SpectrumStrip
 
 ART = 96
 ART_RADIUS = 18
@@ -137,8 +136,6 @@ class DashboardPanel(QWidget, MediaControls):
             button.setIconSize(QSize(28, 28) if button is self.play else QSize(20, 20))
             controls.addWidget(button)
         controls.addStretch()
-        self.spectrum = SpectrumStrip()
-        controls.addWidget(self.spectrum, 0, Qt.AlignmentFlag.AlignVCenter)
         grid.addLayout(controls, 3, 0, 1, 2)
         grid.setRowStretch(4, 1)
         grid.setColumnStretch(1, 1)

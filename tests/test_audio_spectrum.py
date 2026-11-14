@@ -3,7 +3,6 @@ import unittest
 from unittest.mock import patch
 import test_hover
 import audio_spectrum as a
-from spectrum_strip import SpectrumStrip
 
 APP = test_hover.APP
 
@@ -72,18 +71,6 @@ class FakeMonitor:
 class VisualTests(unittest.TestCase):
     window = test_hover.HoverTests.window
 
-    def test_strip_rests_as_dots_and_moves_with_levels(self):
-        strip = SpectrumStrip()
-        self.addCleanup(strip.deleteLater)
-        strip.show()
-        rest = strip.grab().toImage()
-        strip.set_levels([.9] * 24)
-        self.assertTrue(strip.live())
-        self.assertNotEqual(rest, strip.grab().toImage())
-        strip.set_levels([])
-        self.assertFalse(strip.live())
-        self.assertEqual(rest, strip.grab().toImage())
-
     def test_the_monitor_runs_only_while_music_plays_and_motion_is_allowed(self):
         w = self.window({'motion_mode': 'full'})
         FakeMonitor.started = FakeMonitor.stopped = 0
@@ -101,10 +88,10 @@ class VisualTests(unittest.TestCase):
             self.assertEqual(FakeMonitor.stopped, 2, 'reduced motion never listens')
         w.spectrum_monitor = None
 
-    def test_levels_reach_the_pill_bars_and_the_now_page(self):
+    def test_levels_reach_only_the_pill_bars(self):
         w = self.window({'motion_mode': 'full'})
         w.on_spectrum([.8] * 24)
-        self.assertTrue(w.dashboard.spectrum.live())
+        self.assertFalse(hasattr(w.dashboard, 'spectrum'), 'the open island has no visualiser')
         self.assertEqual(len(w.now_playing._live), 6)
         w.on_spectrum([])
         self.assertIsNone(w.now_playing._live)

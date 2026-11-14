@@ -280,7 +280,7 @@ class OverlayUpgradeMixin:
         # Only a running Daisy listens: never a half-built window, and never a test.
         wanted = (getattr(self, '_monitors_started', False)
                   and self.media_state == 'Playing' and self.isVisible() and not self.game_suspended
-                  and not self.reduced_motion and self.current_state in ('Idle', 'Hover'))
+                  and not self.reduced_motion and self.current_state == 'Idle')
         monitor = getattr(self, 'spectrum_monitor', None)
         if wanted and (monitor is None or not monitor.isRunning()):
             if monitor is None:
@@ -293,9 +293,7 @@ class OverlayUpgradeMixin:
             monitor.stop()
 
     def on_spectrum(self, levels):
-        self.now_playing.set_levels(levels)
-        self.dashboard.spectrum.set_tint(self.ambient_tint())
-        self.dashboard.spectrum.set_levels(levels)
+        self.now_playing.set_levels(levels)   # the pill's bars only; the open island stays calm
 
     def save_glitch_report(self):
         """Write the last seconds of motion beside the logs and show where it went."""
