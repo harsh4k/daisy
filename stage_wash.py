@@ -1,4 +1,4 @@
-"""The light each open-island page brings with it, painted behind its content.
+"""Page light behind the open island: switched off. Every page is flat true black.
 
 Now glows in the album's colour (or the accent), Weather in sky and sun, Tasks in
 a faint accent, Calendar in night blue and Tools in amber. Changing page
@@ -17,19 +17,7 @@ def _companion(color):
 
 
 def spots(window, page):
-    """(colour, x, y, radius as a share of width, strength) for each light."""
-    t = window.theme
-    if page == 'dashboard':
-        tint = window.ambient_tint()
-        return ((QColor(tint), .2, .45, .42, .5), (_companion(tint), .34, .82, .3, .3))
-    if page == 'weather':
-        return ((QColor(t['wash_sky']), .15, .2, .6, .55), (QColor(t['wash_sun']), .22, .18, .2, .38))
-    if page == 'calendar':
-        return ((QColor(t['accent']), .1, .3, .5, .18),)
-    if page == 'month':
-        return ((QColor(t['wash_night']), .12, .5, .55, .9),)
-    if page == 'tools':
-        return ((QColor(t['timer_accent']), .18, .5, .45, .2),)
+    """Pages are flat true black now: the coloured radial washes read as muddy gradients."""
     return ()
 
 

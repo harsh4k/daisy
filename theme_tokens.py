@@ -1,16 +1,18 @@
 """Daisy's complete neutral/accent theme presets."""
 
-# Each theme is one clear, saturated accent on true black (or on its own deep tint when the
-# surface is "tinted"). The earlier set was five washed-out pastels that all read as grey.
+# Every theme is the same calm, true-black island with ONE accent, taken from the
+# system colours macOS and iOS use, so each reads clearly on black and stays legible.
+# Greys are Apple's dark-mode greys. Tinted surfaces get only a faint hue in the black.
 # (background, surface, hover, border, accent, text, muted)
+_GREYS = ('#1c1c1e', '#2c2c2e', '#38383a')
 THEMES = {
-    'Dark Matter': ('#09090b', '#111113', '#202024', '#29292d', '#8e9bff', '#f5f5f7', '#b1b1b8'),
-    'Graphite': ('#131416', '#202225', '#2c2f34', '#3d424a', '#e5e5ea', '#f2f4f7', '#b4bcc6'),
-    'Amethyst': ('#150d1f', '#22152f', '#2f1d42', '#45295f', '#bf5af2', '#f8f0ff', '#c2aed6'),
-    'Midnight': ('#07101f', '#0e1b33', '#162846', '#223a63', '#3d9bff', '#eef5ff', '#a9bcd8'),
-    'Rose': ('#1f0b12', '#32121d', '#471a2a', '#63263b', '#ff5c7c', '#fff0f4', '#dbb0bd'),
-    'Mint': ('#06170f', '#0c2519', '#123424', '#1b4a33', '#30d5a0', '#effff8', '#a6cfbc'),
-    'Sunset': ('#1c1104', '#2d1c08', '#40280c', '#5a3811', '#ff9f0a', '#fff7ea', '#d8bf97'),
+    'Dark Matter': ('#000000',) + _GREYS + ('#0a84ff', '#f5f5f7', '#98989d'),   # blue
+    'Graphite': ('#000000',) + _GREYS + ('#f5f5f7', '#f5f5f7', '#98989d'),      # white
+    'Midnight': ('#0a0a12',) + _GREYS + ('#5e5ce6', '#f5f5f7', '#98989d'),      # indigo
+    'Amethyst': ('#0e0a12',) + _GREYS + ('#bf5af2', '#f5f5f7', '#98989d'),      # purple
+    'Rose': ('#120a0c',) + _GREYS + ('#ff375f', '#f5f5f7', '#98989d'),          # pink
+    'Sunset': ('#120d07',) + _GREYS + ('#ff9f0a', '#f5f5f7', '#98989d'),        # orange
+    'Mint': ('#08100b',) + _GREYS + ('#30d158', '#f5f5f7', '#98989d'),          # green
 }
 
 

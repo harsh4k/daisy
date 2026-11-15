@@ -76,7 +76,7 @@ class StageTests(unittest.TestCase):
         self.assertEqual(w.next_task(at(15, 0))['name'], 'Gym')
         self.assertIsNone(w.next_task(at(19, 0)))
 
-    def test_each_page_brings_its_own_light(self):
+    def test_every_page_is_flat_black_without_a_gradient_wash(self):
         w = self.open_now()
         rect = w.get_island_rect()
         point = QPointF(rect.x() + rect.width() * .2, rect.y() + rect.height() * .45)
@@ -90,9 +90,9 @@ class StageTests(unittest.TestCase):
             self.assertTrue(settle.settle_shell(w))
             self.assertEqual(w._wash_page, feature)
             self.assertEqual(w._wash_mix, 1., 'reduced motion switches the light at once')
-            self.assertTrue(stage_wash.spots(w, feature))
+            self.assertEqual(stage_wash.spots(w, feature), ())
             colours[feature] = sample().name()
-        self.assertEqual(len(set(colours.values())), 4, colours)
+        self.assertEqual(set(colours.values()), {'#000000'}, colours)
         if APP.focusWidget():
             APP.focusWidget().clearFocus()  # focus inside the island keeps it open on purpose
         w.change_state('Idle')
@@ -103,7 +103,6 @@ class StageTests(unittest.TestCase):
     def test_now_page_follows_the_album_colour(self):
         w = self.open_now()
         w.update_media('Playing', 'Midnight City', 'M83', '#1db954')
-        self.assertEqual(stage_wash.spots(w, 'dashboard')[0][0], QColor('#1db954'))
         self.assertEqual(w.dashboard.eyebrow.text(), 'NOW PLAYING')
         w.update_media('Paused', 'Midnight City', 'M83', '#1db954')
         self.assertEqual(w.dashboard.eyebrow.text(), 'PAUSED')
