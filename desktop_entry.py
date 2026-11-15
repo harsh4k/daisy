@@ -40,6 +40,8 @@ def run(island_type):
             island.attach_event_bridge(events)
         if hasattr(island, 'start_monitors'):
             island.start_monitors()
+        if hasattr(island, 'recover_modes'):
+            island.recover_modes()
         island.runtime_tray = RuntimeTray(island, island.open_settings,
             island.request_restart, island.open_logs, island.close)
         island.show()
@@ -62,6 +64,8 @@ def run(island_type):
                     monitor.stop()
                     if hasattr(monitor, 'wait'):
                         monitor.wait(3000)
+        if island is not None and hasattr(island, 'shutdown_modes'):
+            island.shutdown_modes()
         if island is not None and hasattr(island, 'runtime_tray'):
             island.runtime_tray.tray.hide()
         if lock is not None:

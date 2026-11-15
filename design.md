@@ -129,6 +129,32 @@ backup, after a yes): PermissionRequest and Stop, both running `Daisy.exe --dais
 The hook only talks to a Daisy it can verify is the same binary. Stop sends one
 bounded line (finished, provider, folder name) over a user-only pipe.
 
+## Modes
+
+Tools -> Modes holds two cards, Gaming and College, each with one switch, a sliders
+button to choose apps, and an opt-in auto start (when a Hidden-rule game runs; when the
+charger is unplugged). Only one mode is on at a time. Once a mode has run, its status
+replaces the card's one-line description, showing up to three short facts. The tooltip
+lists every change.
+
+- Gaming: High performance plan, unload Ollama models (their GPU memory is reported by
+  Ollama), freeze the chosen apps, and run one short `nvidia-smi` query every 5 s
+  (never a long-lived `-l` reader, which would outlive a crash). Turning it off
+  shows a match report: length, peak temperature, GPU load, minutes slowed by heat.
+- College: Balanced plan, unload Ollama, freeze the chosen apps, and set the chosen apps
+  to the Intel GPU (`HKCU\...\DirectX\UserGpuPreferences`; this applies the next time
+  each app opens). It lists the apps still on the NVIDIA GPU once, never by polling,
+  because a query wakes the card. If the primary display is wired to the NVIDIA GPU
+  (a MUX set to discrete), it says so, because then that GPU can never sleep. On battery it forecasts when the battery reaches 10%
+  from measured drain and warns when that comes before a task's start time. The refresh
+  rate and brightness are never changed.
+
+`mode_engine.py` writes `mode_state.json` beside the config before each change and
+undoes the changes on Turn off, on exit and on the next start after a crash. Freezing
+uses exact executable names, matched by pid plus process start time. It never freezes
+Windows, Daisy, Claude, Codex, Discord, Riot, Vanguard, Valorant, Ollama, the foreground
+app or Hidden-rule games. No admin rights are needed. Nothing touches a game process.
+
 ## Motion
 
 The shell stays anchored at top center; text and artwork never scale. Animate

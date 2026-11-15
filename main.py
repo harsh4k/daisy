@@ -34,6 +34,7 @@ import overlay_fit
 from motion_policy import effective_reduced_motion
 from visual_shell import apply_visual_preferences, style_legacy_panels, STATIC_CHARGING_PHASE
 from overlay_upgrade import OverlayUpgradeMixin
+from mode_wiring import ModeWiringMixin
 from idle_icon import IdleIcon, ICON_STYLES
 from aurora import AudioBars
 from stage_bar import StageBar, HEIGHT as BAR_HEIGHT
@@ -71,7 +72,7 @@ DEFAULT_TASKS = [
     {"name": "Dinner with Family", "category": "Personal", "color": "#FF5050", "time": "8:00 PM"}
 ]
 
-class DynamicIsland(OverlayUpgradeMixin, QWidget):
+class DynamicIsland(ModeWiringMixin, OverlayUpgradeMixin, QWidget):
     def __init__(self):
         super().__init__()
         
@@ -641,6 +642,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
         self.dashboard.set_preferred_source(self.settings['preferred_media_source'])
         self.dashboard.set_theme(self.theme)
         self.create_tools_panel()
+        self.create_modes_tab()
         # Stage: no dock. A top bar says where you are; the glances on Now open pages.
         self.stage_bar = StageBar()
         self.stage_bar.set_theme(self.theme)
@@ -1916,6 +1918,7 @@ class DynamicIsland(OverlayUpgradeMixin, QWidget):
             self.flush_pending_notification()
 
     def closeEvent(self, event):
+        self.shutdown_modes()
         self.status_icon.set_active(False)
         for timer in (self.power_timer, self.master_timer, self.anim_timer, self.hit_timer, self.revert_timer):
             timer.stop()

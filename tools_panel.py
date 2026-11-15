@@ -196,6 +196,8 @@ class ToolsPanel(QWidget):
         self.shelf.set_theme(theme)
         if hasattr(self, 'approvals_panel'):
             self.approvals_panel.set_theme(theme)
+        if hasattr(self, 'modes_panel'):
+            self.modes_panel.set_theme(theme)
         self.tick()
         self.setStyleSheet(f'''
             QWidget {{ color: {theme['text']}; background: transparent; {font_css('body')} }}

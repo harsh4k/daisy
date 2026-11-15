@@ -85,6 +85,8 @@ inside the island to move between pages. Every page has its own light.
 - **Focus timer** with presets, a custom length and a ruler. The countdown shows
   in the pill.
 - **File shelf** to park files you are moving between windows.
+- **Gaming and College modes**: one click to set the laptop up for a match or for
+  a day on battery. See [Gaming and College modes](#gaming-and-college-modes).
 - **Tasks, calendar and weather** for your city (searchable in settings).
 - **AI permission requests** (optional, from source). See below.
 - **Pill or Notch** shape, five themes, and a Reduce Motion mode that follows
@@ -98,6 +100,37 @@ Right-click the island for settings, themes, shape and startup.
   <img src="docs/images/notification-notch.png" alt="A notification in Notch style" width="480">
 </p>
 
+## Gaming and College modes
+
+<p align="center">
+  <img src="docs/images/modes.png" alt="Tools, Modes: a Gaming card and a College card, each with one switch" width="560">
+</p>
+
+Open the island, go to **Tools → Modes** and press **Turn on**. Only one mode is
+on at a time, and pressing **Turn off** puts back exactly what it changed.
+
+| | Gaming | College |
+|---|---|---|
+| Power plan | High performance | Balanced |
+| Ollama models (for example, Loom's) | Unloaded, freeing their GPU memory | Unloaded |
+| Apps you choose (sliders button) | Frozen until you turn it off | Frozen until you turn it off |
+| GPU per app | — | Chosen apps use the Intel GPU the next time they open |
+| Report | After the match: length, peak GPU temperature, GPU load, minutes slowed by heat | On battery: when you will reach 10%, measured from your own drain, with a warning if that is before your next task |
+
+- **Auto start** (off by default): Gaming when a game set to Hidden in App rules
+  starts (Valorant by default), and it ends 30 s after the game closes. College when
+  you unplug the charger, and it ends when you plug back in.
+- **If your screen runs on the NVIDIA GPU** (laptops with a MUX switch set to
+  discrete only), College mode tells you. That GPU cannot sleep in this setup, so
+  for real battery savings switch the display mode to Optimus or hybrid in NVIDIA
+  Control Panel or your BIOS, then restart.
+- **What it never touches:** the screen's refresh rate and brightness, the game,
+  its launcher and anti-cheat (Riot, Vanguard), Discord, Claude, Codex, Ollama,
+  Windows itself, and whatever app you are using at that moment.
+- **Safe by design:** each change is written to `mode_state.json` beside
+  `config.json` before it is made. Turning the mode off, quitting Daisy, or the next
+  start after a crash undoes everything listed there. No admin rights are needed.
+
 ## Privacy
 
 Daisy runs on your PC. It reads Windows media sessions and notifications that
@@ -106,6 +139,9 @@ kinds of web request, each only when you use that feature:
 
 - weather and city search: [Open-Meteo](https://open-meteo.com)
 - synced lyrics for the current track: [LRCLIB](https://lrclib.net)
+
+Gaming and College modes talk only to your own PC: Ollama on `127.0.0.1` and
+NVIDIA's `nvidia-smi`.
 
 Your settings live in `config.json` next to `Daisy.exe`.
 
