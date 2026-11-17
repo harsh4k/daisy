@@ -1,6 +1,6 @@
 """System usage and battery, now a Tools tab rather than the island's first page."""
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QLabel, QProgressBar, QVBoxLayout, QGridLayout
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import QWidget, QLabel, QProgressBar, QPushButton, QVBoxLayout, QHBoxLayout, QGridLayout
 import qtawesome as qta
 
 from theme_tokens import get_theme
@@ -17,6 +17,8 @@ def rate(value):
 
 
 class SystemCard(QWidget):
+    free_ram_requested = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName('SystemCard')
@@ -69,6 +71,19 @@ class SystemCard(QWidget):
         self.network = QLabel('↓ —   ↑ —', objectName='Muted')
         self.network.setAccessibleName('Network transfer rate')
         layout.addWidget(self.network)
+        actions = QHBoxLayout()
+        actions.setSpacing(10)
+        self.free_ram = QPushButton('Free RAM', objectName='FreeRam')
+        self.free_ram.setFixedHeight(30)
+        self.free_ram.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.free_ram.setToolTip('Runs your free-ram.ps1: closes the background apps it lists')
+        self.free_ram.setAccessibleName('Free RAM: runs your free-ram script')
+        self.free_ram.clicked.connect(self.free_ram_requested)
+        self.free_ram_status = QLabel('', objectName='Muted')
+        self.free_ram_status.setAccessibleName('Free RAM result')
+        actions.addWidget(self.free_ram)
+        actions.addWidget(self.free_ram_status, 1)
+        layout.addLayout(actions)
         layout.addStretch()
         self.set_theme(get_theme())
 
@@ -111,4 +126,9 @@ class SystemCard(QWidget):
             QLabel#MetricValue {{ color: {t['muted']}; {font_css('metric')} }}
             QProgressBar {{ background: {t['hover']}; border: none; border-radius: 2px; }}
             QProgressBar::chunk {{ background: {t['accent']}; border-radius: 2px; }}
+            QPushButton#FreeRam {{ {font_css('title')} color: {t['text']}; background: {t['surface']};
+                border: 1px solid {t['border']}; border-radius: 15px; padding: 0 14px; }}
+            QPushButton#FreeRam:hover {{ background: {t['hover']}; }}
+            QPushButton#FreeRam:focus {{ border-color: {t['accent']}; }}
+            QPushButton#FreeRam:disabled {{ color: {t['muted']}; }}
         ''')

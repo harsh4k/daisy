@@ -44,6 +44,11 @@ class OverlayUpgradeMixin:
         # System usage moved here from the island's first page.
         self.system_card = SystemCard()
         self.tools_panel.tabs.addTab(self.system_card, 'System')
+        from free_ram import FreeRam
+        self.free_ram = FreeRam(self.settings.get('free_ram_script'), parent=self)
+        self.system_card.free_ram_requested.connect(self.free_ram.run)
+        self.free_ram.started.connect(self.on_free_ram_started)
+        self.free_ram.finished.connect(self.on_free_ram_finished)
         self.tools_panel.minutes.setValue(self.settings['timer_default_minutes'])
         self.tools_panel.set_theme(self.theme)
         self.tools_panel.shelf_changed.connect(self.save_shelf)
@@ -294,6 +299,14 @@ class OverlayUpgradeMixin:
 
     def on_spectrum(self, levels):
         self.now_playing.set_levels(levels)   # the pill's bars only; the open island stays calm
+
+    def on_free_ram_started(self):
+        self.system_card.free_ram.setEnabled(False)
+        self.system_card.free_ram_status.setText('Freeing RAM…')
+
+    def on_free_ram_finished(self, text):
+        self.system_card.free_ram.setEnabled(True)
+        self.system_card.free_ram_status.setText(text)
 
     def save_glitch_report(self):
         """Write the last seconds of motion beside the logs and show where it went."""
