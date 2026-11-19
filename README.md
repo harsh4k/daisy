@@ -46,6 +46,12 @@ To install with an option, save the script first:
 
 **Uninstall:** `& "$env:LOCALAPPDATA\Programs\Daisy\uninstall.ps1"`
 (add `-RemoveSettings` to delete your settings too).
+For a custom `-InstallDir`, run `uninstall.ps1` from that installation folder.
+The uninstaller uses its own folder by default. Keep `LICENSE` and `NOTICE.md`
+beside the application; both are copied from the verified release package.
+Installation writes `.daisy-install.json` to identify its folder. Keep this file
+until uninstalling. `-RemoveSettings` removes Daisy's known files and leaves
+unrelated files in a custom installation folder alone.
 
 **Needs** 64-bit Windows 10 (1809) or Windows 11.
 
@@ -165,8 +171,7 @@ To build `Daisy.exe`:
 powershell -File build_exe.ps1
 ```
 
-The result is `dist\Daisy.exe`. `release\make_screenshots.py` regenerates the
-images in this README.
+The result is `dist\Daisy.exe`. The README images are in `docs/images/`.
 
 ### AI permission requests (advanced)
 
