@@ -40,6 +40,7 @@ $work = Join-Path ([IO.Path]::GetTempPath()) ('daisy-install-' + [Guid]::NewGuid
 New-Item -ItemType Directory -Path $work | Out-Null
 try {
     if ($here -and (Test-Path -LiteralPath (Join-Path $here 'Daisy.exe'))) {
+        $payload = $here
         $source = Join-Path $here 'Daisy.exe'
         Write-Host 'Using the Daisy.exe next to this script.'
     } else {
@@ -56,8 +57,14 @@ try {
         $expected = ((Invoke-RestMethod -Uri $sum.browser_download_url -Headers @{ 'User-Agent' = 'daisy-installer' }) -split '\s+')[0].ToLowerInvariant()
         if ((Get-Sha256 $zipPath) -ne $expected) { throw 'Checksum mismatch: the download is damaged or was changed. Nothing was installed.' }
         Expand-Archive -LiteralPath $zipPath -DestinationPath $work -Force
+        $payload = $work
         $source = Join-Path $work 'Daisy.exe'
         if (-not (Test-Path -LiteralPath $source)) { throw 'The release zip has no Daisy.exe.' }
+    }
+    foreach ($extra in 'uninstall.ps1', 'LICENSE', 'NOTICE.md') {
+        if (-not (Test-Path -LiteralPath (Join-Path $payload $extra))) {
+            throw "The release package has no $extra. Nothing was installed."
+        }
     }
 
     # 2. Stop a running copy so the file can be replaced.
@@ -73,12 +80,11 @@ try {
     }
     Copy-Item -LiteralPath $source -Destination $target -Force
     if ((Get-Sha256 $source) -ne (Get-Sha256 $target)) { throw 'The installed file does not match the download.' }
-    foreach ($extra in 'uninstall.ps1', 'LICENSE') {
-        if ($here -and (Test-Path -LiteralPath (Join-Path $here $extra))) { Copy-Item (Join-Path $here $extra) $InstallDir -Force }
+    foreach ($extra in 'uninstall.ps1', 'LICENSE', 'NOTICE.md') {
+        Copy-Item -LiteralPath (Join-Path $payload $extra) -Destination $InstallDir -Force
     }
-    if (-not (Test-Path -LiteralPath (Join-Path $InstallDir 'uninstall.ps1'))) {
-        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$repo/main/uninstall.ps1" -OutFile (Join-Path $InstallDir 'uninstall.ps1') -ErrorAction SilentlyContinue
-    }
+    @{ kind = 'Daisy'; directory = (Get-Item -LiteralPath $InstallDir).FullName.TrimEnd([char[]]'\/') } |
+        ConvertTo-Json | Set-Content -LiteralPath (Join-Path $InstallDir '.daisy-install.json') -Encoding UTF8
 
     # 4. First install only: start with settings that do not touch Windows startup.
     $config = Join-Path $InstallDir 'config.json'

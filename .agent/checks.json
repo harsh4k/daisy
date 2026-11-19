@@ -1,0 +1,6 @@
+{
+  "checks": [
+    {"name": "installer regressions", "run": ["python", "-m", "unittest", "discover", "-s", "tests", "-p", "test_installer.py", "-v"]},
+    {"name": "unit tests", "run": ["python", "-m", "unittest", "discover", "-s", "tests"]}
+  ]
+}
